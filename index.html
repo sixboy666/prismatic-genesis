@@ -830,8 +830,9 @@
     // ══════════════════════════════════════════════════════════════════════
     function draw() {
         const sc = SCENES[currentSceneIndex];
-        // Faint background fade for trails. Lower alpha => longer persistence.
-        const fadeAlpha = Math.max(6, 30 - params.trailLength);
+        // Background fade — higher floor so trails clear faster and the
+        // image stays crisp instead of accumulating into blur.
+        const fadeAlpha = Math.max(16, 42 - params.trailLength);
 
         // 1) Fade rect in normal blend mode (so trails decay correctly).
         blendMode(BLEND);
@@ -844,38 +845,33 @@
         if (frameCount % 2 === 0) computeField();
         t += 0.01;
 
-        // 2) Background bokeh depth lights (slow drifting soft halos).
-        //    These sit behind the particles and give the underwater-dreamy
-        //    depth seen in the reference image.
+        // 2) Subtle background depth dots — crisp small points, NOT big
+        //    blurry halos. Adds depth without smearing the frame.
         blendMode(ADD);
+        const pal0 = paletteRGB;
+        noStroke();
         for (let i = 0; i < bokehLights.length; i++) {
             const b = bokehLights[i];
             b.x += b.vx;
             b.y += b.vy;
             b.phase += b.pulseSpeed;
-            if (b.x < -b.r) b.x = width + b.r;
-            else if (b.x > width + b.r) b.x = -b.r;
-            if (b.y < -b.r) b.y = height + b.r;
-            else if (b.y > height + b.r) b.y = -b.r;
-            const sprite = glowSprites[b.colorIdx % glowSprites.length];
-            const pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(b.phase));
-            const size = b.r * 2;
-            drawingContext.globalAlpha = 0.10 * pulse;
-            drawingContext.drawImage(sprite.canvas, b.x - size/2, b.y - size/2, size, size);
+            if (b.x < 0) b.x = width; else if (b.x > width) b.x = 0;
+            if (b.y < 0) b.y = height; else if (b.y > height) b.y = 0;
+            const cc = pal0[b.colorIdx % pal0.length];
+            const pulse = 0.5 + 0.5 * Math.sin(b.phase);
+            fill(cc[0], cc[1], cc[2], 26 * pulse);
+            ellipse(b.x, b.y, 3 + pulse * 2);
         }
-        drawingContext.globalAlpha = 1;
 
-        // 3) Soft glow halo at pointer position (dreamy "xiaohongshu" vibe).
+        // 3) Pointer attractor indicator — crisp small ring, not a blur.
         if (pointer.active && glowBoost > 0.01) {
-            const pal = paletteRGB;
-            const hc = pal[pal.length - 1] || [255, 240, 220];
-            const haloR = Math.min(width, height) * (0.18 + glowBoost * 0.18);
-            const sprite = glowSprites[glowSprites.length - 1];
-            const size = haloR * 2.4;
-            drawingContext.globalAlpha = 0.35 * glowBoost;
-            drawingContext.drawImage(sprite.canvas, pointer.x - size/2, pointer.y - size/2, size, size);
-            drawingContext.globalAlpha = 1;
-            glowBoost *= 0.93; // decays after the touch ends
+            const hc = pal0[pal0.length - 1] || [255, 240, 220];
+            noFill();
+            stroke(hc[0], hc[1], hc[2], 130 * glowBoost);
+            strokeWeight(1.2);
+            const rr = Math.min(width, height) * 0.045 * (1 + glowBoost * 0.5);
+            ellipse(pointer.x, pointer.y, rr * 2);
+            glowBoost *= 0.90;
         }
 
         // 4) Particles — dispatch per scene's render style.
@@ -1035,46 +1031,46 @@
             }
         }
         display(pal) {
+            // CRISP rendering — small sharp shapes (dots / lines / rings /
+            // polygons), NO big blurry gradient sprites. Matches the clean
+            // generative-art aesthetic of the reference grid.
             const render = SCENES[currentSceneIndex].render;
             const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
             const age = this.life / this.maxLife;          // 1 → 0
             let idx = this.colorIdx;
             if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
             const c = pal[idx % pal.length];
-            const sprite = glowSprites[idx % glowSprites.length];
 
             switch (render) {
                 case 'web': {
-                    // Constellation node — the connecting lines are drawn
-                    // separately by drawWebConnections().
-                    drawingContext.globalAlpha = 0.45 + age * 0.45;
-                    const ns = 10;
-                    drawingContext.drawImage(sprite.canvas, this.x - ns/2, this.y - ns/2, ns, ns);
-                    drawingContext.globalAlpha = 1;
+                    // Small crisp node dot — the lines are drawn separately.
+                    noStroke();
+                    fill(c[0], c[1], c[2], 170 + age * 60);
+                    ellipse(this.x, this.y, 2.4);
                     break;
                 }
                 case 'ripple': {
-                    // Expanding ring from the spawn point (water-droplet vibe).
+                    // Sharp expanding ring outline, no inner blur.
                     const progress = 1 - age;                    // 0 → 1
                     const ringR = progress * Math.min(width, height) * 0.22;
                     const fade = (1 - progress) * (1 - progress * 0.4);
                     noFill();
-                    stroke(c[0], c[1], c[2], 200 * fade);
-                    strokeWeight(1.4 + (1 - progress) * 1.6);
+                    stroke(c[0], c[1], c[2], 230 * fade);
+                    strokeWeight(1.3);
                     ellipse(this.spawnX, this.spawnY, ringR * 2);
-                    // soft inner glow orb
-                    drawingContext.globalAlpha = 0.18 * fade;
-                    drawingContext.drawImage(sprite.canvas, this.spawnX - ringR, this.spawnY - ringR, ringR * 2, ringR * 2);
-                    drawingContext.globalAlpha = 1;
+                    // tiny bright center dot
+                    noStroke();
+                    fill(c[0], c[1], c[2], 200 * fade);
+                    ellipse(this.spawnX, this.spawnY, 2);
                     break;
                 }
                 case 'facets': {
-                    // Translucent rotating hexagon — crystalline tiling.
+                    // Translucent hexagon with a thin crisp outline.
                     const ang = Math.atan2(this.vy, this.vx);
-                    const fsize = 6 + speed * 2.5 + age * 3;
+                    const fsize = 5 + speed * 2 + age * 2.5;
                     const ca = Math.cos(ang), sa = Math.sin(ang);
                     noStroke();
-                    fill(c[0], c[1], c[2], 30 + age * 35);
+                    fill(c[0], c[1], c[2], 22 + age * 28);
                     beginShape();
                     for (let k = 0; k < 6; k++) {
                         const a = k / 6 * TWO_PI;
@@ -1082,39 +1078,38 @@
                         vertex(this.x + lx * ca - ly * sa, this.y + lx * sa + ly * ca);
                     }
                     endShape(CLOSE);
-                    // bright core
-                    drawingContext.globalAlpha = 0.45 + age * 0.3;
-                    drawingContext.drawImage(sprite.canvas, this.x - 5, this.y - 5, 10, 10);
-                    drawingContext.globalAlpha = 1;
+                    // crisp outline
+                    stroke(c[0], c[1], c[2], 90);
+                    strokeWeight(0.6);
+                    noFill();
+                    beginShape();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k / 6 * TWO_PI;
+                        const lx = Math.cos(a) * fsize, ly = Math.sin(a) * fsize;
+                        vertex(this.x + lx * ca - ly * sa, this.y + lx * sa + ly * ca);
+                    }
+                    endShape(CLOSE);
                     break;
                 }
                 case 'streaks': {
-                    // Long light streak along the velocity direction.
+                    // Thin sharp light streak along velocity, no head glow.
                     const len = speed + 0.001;
                     const ux = this.vx / len, uy = this.vy / len;
-                    const stretch = 14 + speed * 9;
-                    const sAlpha = (50 + age * 150) * (1 + glowBoost * 0.4);
-                    stroke(c[0], c[1], c[2], Math.min(255, sAlpha));
-                    strokeWeight(1.0 + speed * 0.25);
-                    line(this.x - ux * stretch, this.y - uy * stretch,
-                         this.x + ux * stretch * 0.25, this.y + uy * stretch * 0.25);
-                    // bright head
-                    drawingContext.globalAlpha = 0.3 + age * 0.5;
-                    drawingContext.drawImage(sprite.canvas, this.x - 7, this.y - 7, 14, 14);
-                    drawingContext.globalAlpha = 1;
+                    const stretch = 10 + speed * 7;
+                    stroke(c[0], c[1], c[2], Math.min(255, 70 + age * 160));
+                    strokeWeight(0.9 + speed * 0.2);
+                    line(this.x - ux * stretch, this.y - uy * stretch, this.x, this.y);
                     break;
                 }
                 case 'bokeh':
                 default: {
-                    // Dreamy bokeh orb + faint trail line.
-                    const lineAlpha = (28 + age * 60) * (1 + glowBoost * 0.4);
-                    stroke(c[0], c[1], c[2], Math.min(255, lineAlpha));
-                    strokeWeight(0.8 + Math.min(speed, 4) * 0.35);
+                    // Crisp small dot + faint thin trail line.
+                    stroke(c[0], c[1], c[2], Math.min(255, 45 + age * 70));
+                    strokeWeight(0.6 + Math.min(speed, 4) * 0.2);
                     line(this.px, this.py, this.x, this.y);
-                    const size = 9 + speed * 3.5 + age * 5;
-                    drawingContext.globalAlpha = Math.min(1, (0.22 + age * 0.55) * (1 + glowBoost * 0.6));
-                    drawingContext.drawImage(sprite.canvas, this.x - size/2, this.y - size/2, size, size);
-                    drawingContext.globalAlpha = 1;
+                    noStroke();
+                    fill(c[0], c[1], c[2], Math.min(255, 130 + age * 90));
+                    ellipse(this.x, this.y, 1.8 + Math.min(speed, 4) * 0.5);
                     break;
                 }
             }
