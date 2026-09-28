@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0519">
-    <title>Prismatic Genesis - Generative Art Game</title>
+    <meta name="theme-color" content="#f5f3ee">
+    <title>Flow Field Genesis - Generative Art</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ink: #141413;
-            --paper: #faf9f5;
-            --mid: #b0aea5;
-            --line: #e8e6dc;
-            --orange: #d97757;
-            --blue: #6a9bcc;
-            --green: #788c5d;
+            --ink: #1a1a1a;
+            --paper: #f5f3ee;
+            --paper-soft: #ebe8e0;
+            --mid: #8a8580;
+            --line: #d8d4cc;
+            --accent: #b85a3a;
+            --accent-soft: rgba(184, 90, 58, 0.12);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,1295 +28,1054 @@
             height: 100%;
             overscroll-behavior: none;
             -webkit-overflow-scrolling: touch;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--paper) 0%, #f5f3ee 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--paper);
             min-height: 100vh;
             color: var(--ink);
-            overflow-x: hidden;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        .sidebar {
-            width: 340px;
-            flex-shrink: 0;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(10px);
-            padding: 24px;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
-            overflow-y: auto;
-            overflow-x: hidden;
-            max-height: calc(100vh - 40px);
-        }
-
-        /* Mobile sidebar toggle button (hidden on desktop) */
-        .sidebar-toggle {
-            display: none;
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 100;
-            background: var(--orange);
-            color: white;
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            font-size: 22px;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.4);
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-
-        .sidebar h1 {
-            font-family: 'Lora', serif;
-            font-size: 26px;
-            font-weight: 600;
-            color: var(--ink);
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar .subtitle {
-            color: var(--mid);
-            font-size: 13px;
-            margin-bottom: 24px;
-            line-height: 1.5;
-            font-style: italic;
-        }
-
-        .control-section { margin-bottom: 28px; }
-
-        .control-section h3 {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--ink);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .control-section h3::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--orange);
-            border-radius: 50%;
-        }
-
-        /* Scene Tabs */
-        .scene-tabs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .scene-tab {
-            padding: 10px 8px;
-            border: 1.5px solid var(--line);
-            border-radius: 8px;
-            background: var(--paper);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            color: var(--ink);
-        }
-
-        .scene-tab .swatch {
-            display: block;
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            margin-bottom: 6px;
-        }
-
-        .scene-tab:hover { border-color: var(--orange); transform: translateY(-1px); }
-        .scene-tab.active {
-            border-color: var(--orange);
-            background: #fff;
-            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.15);
-        }
-
-        .seed-input {
-            width: 100%;
-            background: var(--paper);
-            padding: 12px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            margin-bottom: 12px;
-            border: 1px solid var(--line);
-            text-align: center;
-            color: var(--ink);
-        }
-
-        .seed-input:focus {
-            outline: none;
-            border-color: var(--orange);
-            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
-            background: white;
-        }
-
-        .seed-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .control-group { margin-bottom: 18px; }
-
-        .control-group label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--ink);
-            margin-bottom: 8px;
-        }
-
-        .control-group label .value-display {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: var(--mid);
-            font-weight: 400;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            background: var(--line);
-            border-radius: 2px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            background: var(--orange);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.15s ease;
-            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.4);
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
-        input[type="range"]::-moz-range-thumb {
-            width: 22px; height: 22px;
-            background: var(--orange); border-radius: 50%;
-            border: none; cursor: pointer;
-            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.4);
-        }
-
-        .button {
-            background: var(--orange);
-            color: white;
-            border: none;
-            padding: 14px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            font-family: inherit;
-            touch-action: manipulation;
-        }
-        .button:hover { background: #c86641; transform: translateY(-1px); }
-        .button:active { transform: translateY(0); }
-        .button.secondary { background: var(--blue); }
-        .button.secondary:hover { background: #5a8bb8; }
-        .button.tertiary { background: var(--green); }
-        .button.tertiary:hover { background: #6b7b52; }
-
-        .button-row { display: flex; gap: 8px; }
-        .button-row .button { flex: 1; }
-
-        .canvas-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-width: 0;
-            gap: 12px;
-        }
-
-        #canvas-container {
-            width: 100%;
-            max-width: 900px;
-            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(20, 20, 19, 0.18);
-            background: #000;
+            font-weight: 300;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            height: 100dvh;
             position: relative;
+        }
+
+        /* ── Canvas fills the screen ── */
+        #canvas-container {
+            position: absolute;
+            inset: 0;
+            background: var(--paper);
             touch-action: none;
         }
 
         #canvas-container canvas {
             display: block;
-            width: 100% !important;
-            height: auto !important;
             touch-action: none;
         }
 
-        .scene-label {
-            font-family: 'Lora', serif;
-            font-size: 14px;
-            color: var(--mid);
-            text-align: center;
-            letter-spacing: 1px;
+        /* ── Minimal floating title (top-left) ── */
+        .title-card {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 20;
+            pointer-events: none;
+            max-width: 60vw;
         }
 
-        .scene-label b { color: var(--ink); font-weight: 600; }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: var(--mid);
-            padding: 40px;
+        .title-card h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            color: var(--ink);
+            text-shadow: 0 1px 2px rgba(245, 243, 238, 0.8);
         }
 
-        .hint {
+        .title-card .meta {
             font-size: 11px;
             color: var(--mid);
             margin-top: 6px;
-            line-height: 1.5;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 400;
         }
 
-        @media (max-width: 760px) {
-            .container {
-                flex-direction: column;
-                padding: 8px;
-                gap: 8px;
-                min-height: 100vh;
-                min-height: 100dvh;
-            }
+        .title-card .meta b { color: var(--accent); font-weight: 500; }
 
-            .sidebar-toggle {
-                display: flex;
-            }
+        /* ── Hint pill (bottom-center, fades after a few seconds) ── */
+        .hint-pill {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(26, 26, 26, 0.78);
+            color: var(--paper);
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 12px;
+            letter-spacing: 0.4px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            white-space: nowrap;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
 
-            /* Drawer-style sidebar on mobile */
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 86%;
-                max-width: 360px;
-                height: 100%;
-                height: 100dvh;
-                max-height: 100dvh;
-                border-radius: 0 18px 18px 0;
-                transform: translateX(-105%);
-                transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 90;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-                padding: 20px 18px 32px;
-                overflow-y: auto;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
+        .hint-pill.fade { opacity: 0; }
 
-            /* Scrim behind sidebar when open */
-            .scrim {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(20, 20, 19, 0.4);
-                z-index: 80;
-                opacity: 0;
-                transition: opacity 0.25s ease;
-            }
-            .scrim.show {
-                display: block;
-                opacity: 1;
-            }
+        /* ── Gear button (opens panel) ── */
+        .panel-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 30;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(245, 243, 238, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--ink);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            touch-action: manipulation;
+        }
 
-            .canvas-area {
-                width: 100%;
-                padding: 0;
-                margin-top: 4px;
-            }
+        .panel-toggle:hover, .panel-toggle:active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
 
-            #canvas-container {
-                max-width: 100%;
-                width: 100%;
-                border-radius: 10px;
-            }
+        /* ── Control panel (drawer) ── */
+        .panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 340px;
+            max-width: 88vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(245, 243, 238, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid var(--line);
+            z-index: 40;
+            transform: translateX(105%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px 26px 40px;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08);
+        }
 
-            .scene-label {
-                font-size: 12px;
-                padding: 0 4px;
-            }
+        .panel.open { transform: translateX(0); }
 
-            .control-section h3 {
-                font-size: 12px;
-                margin-bottom: 10px;
-            }
+        .panel h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            letter-spacing: -0.3px;
+        }
 
-            .control-group { margin-bottom: 14px; }
+        .panel .panel-sub {
+            font-size: 11px;
+            color: var(--mid);
+            margin-bottom: 28px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
 
-            .scene-tab {
-                padding: 12px 8px;
-                font-size: 12px;
-            }
+        .section { margin-bottom: 26px; }
 
-            .seed-input {
-                padding: 14px;
-                font-size: 16px; /* prevents iOS zoom */
-            }
+        .section-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--mid);
+            text-transform: uppercase;
+            letter-spacing: 1.6px;
+            margin-bottom: 12px;
+        }
 
-            .button {
-                padding: 14px 12px;
-                font-size: 14px;
-            }
+        /* Palette selector */
+        .palettes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
 
-            .hint { font-size: 11px; }
+        .palette-chip {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background: var(--paper);
+            transition: all 0.18s ease;
+            text-align: left;
+        }
+
+        .palette-chip:hover { border-color: var(--accent); }
+
+        .palette-chip.active {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .palette-swatches {
+            display: flex;
+            gap: 2px;
+            height: 14px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .palette-swatches span { flex: 1; }
+
+        .palette-name {
+            font-size: 11px;
+            color: var(--ink);
+            font-weight: 400;
+        }
+
+        /* Seed input */
+        .seed-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .seed-input {
+            flex: 1;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'Inter', monospace;
+            font-size: 13px;
+            text-align: center;
+            color: var(--ink);
+            font-weight: 400;
+        }
+
+        .seed-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--paper);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.18s ease;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .icon-btn:active { transform: scale(0.96); }
+
+        /* Sliders */
+        .slider-group { margin-bottom: 18px; }
+
+        .slider-group .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .slider-group .label {
+            font-size: 12px;
+            color: var(--ink);
+            font-weight: 400;
+        }
+
+        .slider-group .value {
+            font-size: 11px;
+            color: var(--mid);
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 3px;
+            background: var(--line);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(184, 90, 58, 0.35);
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(184, 90, 58, 0.35);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: var(--paper);
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            background: var(--accent);
+        }
+
+        .btn-row { display: flex; gap: 8px; }
+        .btn-row .btn { flex: 1; }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid var(--line);
+        }
+
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Scrim */
+        .scrim {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.25);
+            z-index: 35;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .scrim.show { display: block; opacity: 1; }
+
+        /* Loading */
+        .loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--mid);
+            font-size: 13px;
+            letter-spacing: 1px;
+            z-index: 10;
+        }
+
+        @media (max-width: 600px) {
+            .title-card { top: 16px; left: 16px; }
+            .title-card h1 { font-size: 22px; }
+            .title-card .meta { font-size: 10px; }
+            .panel-toggle { top: 16px; right: 16px; width: 40px; height: 40px; }
+            .hint-pill { bottom: 16px; font-size: 11px; padding: 8px 16px; }
+            .panel { padding: 24px 20px 32px; }
         }
     </style>
 </head>
 <body>
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Open controls">&#9776;</button>
-    <div class="scrim" id="scrim"></div>
-    <div class="container">
-        <div class="sidebar" id="sidebar">
-            <h1>Prismatic Genesis</h1>
-            <div class="subtitle">A generative art game. Each scene is a different physics. One seed, infinite worlds.</div>
+    <div class="app">
+        <div id="canvas-container">
+            <div class="loading">Composing the field…</div>
+        </div>
 
-            <!-- Scene Selector -->
-            <div class="control-section">
-                <h3>Scene</h3>
-                <div class="scene-tabs" id="scene-tabs"></div>
+        <div class="title-card">
+            <h1>Flow Field Genesis</h1>
+            <div class="meta">Palette <b id="tc-palette">Misty</b> · Seed <b id="tc-seed">12345</b></div>
+        </div>
+
+        <button class="panel-toggle" id="panel-toggle" aria-label="Open controls">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+        </button>
+
+        <div class="scrim" id="scrim"></div>
+
+        <div class="panel" id="panel">
+            <h2>Controls</h2>
+            <div class="panel-sub">Tune the composition</div>
+
+            <div class="section">
+                <div class="section-label">Palette</div>
+                <div class="palettes" id="palettes"></div>
             </div>
 
-            <!-- Seed -->
-            <div class="control-section">
-                <h3>Seed</h3>
-                <input type="number" id="seed-input" class="seed-input" value="12345" onchange="updateSeed()">
-                <div class="seed-controls">
-                    <button class="button secondary" onclick="previousSeed()">&#8592; Prev</button>
-                    <button class="button secondary" onclick="nextSeed()">Next &#8594;</button>
+            <div class="section">
+                <div class="section-label">Seed</div>
+                <div class="seed-row">
+                    <input type="number" id="seed-input" class="seed-input" value="12345">
+                    <button class="icon-btn" id="seed-prev" aria-label="Previous seed">‹</button>
+                    <button class="icon-btn" id="seed-next" aria-label="Next seed">›</button>
                 </div>
-                <button class="button tertiary" onclick="randomSeedAndUpdate()">&#8635; Random Seed</button>
+                <button class="icon-btn" id="seed-random" style="width:100%;height:38px;" aria-label="Random seed">⟲ Random Seed</button>
             </div>
 
-            <!-- Parameters -->
-            <div class="control-section">
-                <h3>Parameters</h3>
+            <div class="section">
+                <div class="section-label">Parameters</div>
 
-                <div class="control-group">
-                    <label>Particle Count <span class="value-display" id="particleCount-value">2200</span></label>
-                    <input type="range" id="particleCount" min="300" max="6000" step="150" value="2200" oninput="updateParam('particleCount', this.value)">
+                <div class="slider-group">
+                    <div class="label-row"><span class="label">Particles</span><span class="value" id="v-count">18000</span></div>
+                    <input type="range" id="s-count" min="5000" max="40000" step="1000" value="18000">
                 </div>
 
-                <div class="control-group">
-                    <label>Flow Speed <span class="value-display" id="flowSpeed-value">0.8</span></label>
-                    <input type="range" id="flowSpeed" min="0.1" max="3.0" step="0.1" value="0.8" oninput="updateParam('flowSpeed', this.value)">
+                <div class="slider-group">
+                    <div class="label-row"><span class="label">Flow Speed</span><span class="value" id="v-speed">1.0</span></div>
+                    <input type="range" id="s-speed" min="0.2" max="3.0" step="0.1" value="1.0">
                 </div>
 
-                <div class="control-group">
-                    <label>Noise Scale <span class="value-display" id="noiseScale-value">0.0040</span></label>
-                    <input type="range" id="noiseScale" min="0.0005" max="0.0200" step="0.0005" value="0.0040" oninput="updateParam('noiseScale', this.value)">
+                <div class="slider-group">
+                    <div class="label-row"><span class="label">Noise Scale</span><span class="value" id="v-noise">0.0035</span></div>
+                    <input type="range" id="s-noise" min="0.0008" max="0.0120" step="0.0002" value="0.0035">
                 </div>
 
-                <div class="control-group">
-                    <label>Trail Length <span class="value-display" id="trailLength-value">12</span></label>
-                    <input type="range" id="trailLength" min="1" max="30" step="1" value="12" oninput="updateParam('trailLength', this.value)">
+                <div class="slider-group">
+                    <div class="label-row"><span class="label">Density Pull</span><span class="value" id="v-density">0.6</span></div>
+                    <input type="range" id="s-density" min="0" max="2.0" step="0.1" value="0.6">
                 </div>
 
-                <div class="control-group">
-                    <label>Field Strength <span class="value-display" id="fieldStrength-value">1.2</span></label>
-                    <input type="range" id="fieldStrength" min="0.2" max="4.0" step="0.1" value="1.2" oninput="updateParam('fieldStrength', this.value)">
+                <div class="slider-group">
+                    <div class="label-row"><span class="label">Trail Fade</span><span class="value" id="v-trail">0.12</span></div>
+                    <input type="range" id="s-trail" min="0.02" max="0.40" step="0.02" value="0.12">
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="control-section">
-                <h3>Actions</h3>
-                <div class="button-row" style="margin-bottom:8px;">
-                    <button class="button" onclick="regenerate()">&#8635; Regenerate</button>
-                    <button class="button secondary" onclick="resetParameters()">Reset</button>
+            <div class="section">
+                <div class="section-label">Actions</div>
+                <button class="btn btn-primary" id="btn-regenerate" style="margin-bottom:8px;">Regenerate</button>
+                <div class="btn-row">
+                    <button class="btn btn-ghost" id="btn-pause">Pause</button>
+                    <button class="btn btn-ghost" id="btn-save">Save PNG</button>
                 </div>
-                <button class="button tertiary" onclick="downloadPNG()">&#8627; Download PNG</button>
-                <p class="hint">Tip: tap or drag on the canvas to attract particles. Switch scenes to explore a new physics — each carries its own palette and field equations.</p>
             </div>
         </div>
 
-        <div class="canvas-area">
-            <div id="canvas-container">
-                <div class="loading">Initializing generative art...</div>
-            </div>
-            <div class="scene-label">Scene <b id="scene-name">Ripple Pond</b> &middot; seed <b id="scene-seed">12345</b></div>
-        </div>
+        <div class="hint-pill" id="hint">Drag to create wind · Tap to seed new life</div>
     </div>
 
     <script>
     // ══════════════════════════════════════════════════════════════════════
-    // PRISMATIC GENESIS - A multi-scene generative art game
-    // Every scene is a different algorithm + palette. One seed, many worlds.
+    // FLOW FIELD GENESIS
+    // Tens of thousands of art particles driven by Perlin-noise flow fields.
+    // Four particle species: petals, paper, lines, fragments.
+    // Density field modulates gathering and whitespace.
     // ══════════════════════════════════════════════════════════════════════
 
-    // ----- Scene definitions: each scene = a distinct art installation -----
-    //   Every scene has its own: algorithm, motion, visual style, interaction.
-    //   render   – how particles are drawn
-    //   field    – what flow field drives motion ('none' = no field)
-    //   interaction – how touch/mouse affects particles
-    //     'spawn'   – touch spawns new ripple centers
-    //     'swirl'   – touch creates a vortex (tangential force)
-    //     'wind'    – touch deflects particles away (wind gust)
-    //     'grow'    – touch grows & brightens nearby crystals
-    //     'attract' – touch pulls particles in
-    //   connect  – draw organic connection lines between nearby particles
-    const SCENES = [
+    // ── Curated palettes (soft, minimalist, exhibition-style) ──
+    const PALETTES = [
         {
-            key: 'ripple',
-            name: 'Ripple Pond',
-            palette: ['#0a3d3a', '#1c7050', '#3aa878', '#7fd8b0', '#cfeee0'],
-            bg: [176, 224, 214],
-            blend: 'BLEND',
-            field: 'none',
-            render: 'ripple',
-            interaction: 'spawn',
-            connect: false,
-            defaults: { particleCount: 280, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 14, fieldStrength: 0.6 }
+            name: 'Misty',
+            colors: [
+                [168, 184, 200], [143, 165, 184], [196, 208, 220],
+                [224, 213, 200], [120, 136, 152], [88, 104, 124]
+            ],
+            bg: [238, 234, 228]
         },
         {
-            key: 'petal',
-            name: 'Petal Drift',
-            palette: ['#3a5a8a', '#7aa0d0', '#c8d8f0', '#f0c8d8', '#ffffff'],
-            bg: [206, 226, 242],
-            blend: 'BLEND',
-            field: 'flow',
-            render: 'petal',
-            interaction: 'swirl',
-            connect: false,
-            defaults: { particleCount: 1500, flowSpeed: 0.5, noiseScale: 0.0040, trailLength: 8, fieldStrength: 1.0 }
+            name: 'Autumn',
+            colors: [
+                [200, 152, 120], [184, 120, 88], [212, 168, 136],
+                [232, 208, 176], [168, 104, 72], [120, 72, 48]
+            ],
+            bg: [240, 232, 222]
         },
         {
-            key: 'rain',
-            name: 'Light Rain',
-            palette: ['#0d1b2a', '#4a6b8a', '#9ab8d5', '#d5e8f5', '#ffffff'],
-            bg: [10, 18, 32],
-            blend: 'ADD',
-            field: 'none',
-            render: 'rain',
-            interaction: 'wind',
-            connect: false,
-            defaults: { particleCount: 650, flowSpeed: 1.2, noiseScale: 0.0030, trailLength: 10, fieldStrength: 0.8 }
+            name: 'Iris',
+            colors: [
+                [136, 104, 168], [168, 136, 200], [200, 168, 224],
+                [120, 88, 160], [96, 72, 128], [216, 196, 232]
+            ],
+            bg: [236, 232, 240]
         },
         {
-            key: 'crystal',
-            name: 'Crystal Bloom',
-            palette: ['#0a1c3a', '#2a4a7a', '#5a8bb8', '#a0c4e8', '#e0ecf8'],
-            bg: [216, 232, 245],
-            blend: 'BLEND',
-            field: 'hex',
-            render: 'crystal',
-            interaction: 'grow',
-            connect: false,
-            defaults: { particleCount: 520, flowSpeed: 0.4, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.2 }
+            name: 'Verdant',
+            colors: [
+                [104, 144, 160], [120, 168, 136], [168, 200, 184],
+                [136, 176, 152], [80, 112, 104], [200, 216, 200]
+            ],
+            bg: [232, 236, 228]
         },
         {
-            key: 'ink',
-            name: 'Ink Bloom',
-            palette: ['#2a0a14', '#8a1c2a', '#d04050', '#f08898', '#fbe0e4'],
-            bg: [248, 224, 230],
-            blend: 'BLEND',
-            field: 'curl',
-            render: 'ink',
-            interaction: 'attract',
-            connect: true,
-            defaults: { particleCount: 820, flowSpeed: 0.7, noiseScale: 0.0050, trailLength: 12, fieldStrength: 1.3 }
+            name: 'Sumi',
+            colors: [
+                [42, 42, 42], [90, 90, 90], [138, 138, 138],
+                [176, 168, 152], [212, 204, 192], [232, 228, 220]
+            ],
+            bg: [240, 238, 234]
+        },
+        {
+            name: 'Ember',
+            colors: [
+                [192, 96, 64], [224, 136, 80], [240, 184, 120],
+                [168, 64, 48], [112, 40, 32], [248, 216, 168]
+            ],
+            bg: [238, 230, 222]
         }
     ];
 
-    let currentSceneIndex = 0;
+    // ── Particle species (NOT dots) ──
+    //   0 = translucent petals (curved)
+    //   1 = tiny paper pieces (rotated rects)
+    //   2 = thin lines (velocity streaks)
+    //   3 = geometric fragments (triangles)
+    const TYPES = 4;
 
-    // ----- Global parameters (re-seeded per scene defaults) -----
-    let params = {
-        seed: 12345,
-        particleCount: 2200,
-        flowSpeed: 0.8,
-        noiseScale: 0.0035,
-        trailLength: 12,
-        fieldStrength: 1.3
-    };
+    // ── Global state ──
+    let palIdx = 0;
+    let seed = 12345;
+    let pCount = 18000;
+    let flowSpeed = 1.0;
+    let noiseScale = 0.0035;
+    let densityPull = 0.6;
+    let trailFade = 0.12;
+    let paused = false;
 
-    // ----- p5 state -----
-    let particles = [];
-    let cols, rows;
-    let scl = 14;
-    let field = [];
-    let paletteRGB = [];      // cached [r,g,b] arrays for the current scene
-    let zoff = 0;
-    let t = 0;
+    // ── Particle data (typed arrays for performance) ──
+    let N = 0;
+    let px, py, vx, vy, ang, angVel, life, maxLife, alpha, size, hue, type;
 
-    // ----- Touch / pointer attractor state -----
-    // When the user touches / drags on the canvas we record a normalized
-    // attractor point and pulse a force on nearby particles toward it.
-    let pointer = { active: false, x: 0, y: 0, strength: 0 };
-    let glowBoost = 0;        // briefly intensifies glow on tap
+    // ── Flow field grid ──
+    let cols, rows, cellSize = 22;
+    let fieldX, fieldY;
+    let fieldFrame = 0;
+
+    // ── Density field grid (particle count per cell) ──
+    let densGrid, densFrame = 0;
+
+    // ── Wind field (drag interaction) ──
+    let windX, windY, windLife;
+
+    // ── Spawn bursts (tap interaction) ──
+    let bursts = [];
+
+    // ── Canvas ──
+    let W, H;
+    let ctx;             // raw 2D context for fast rendering
+    let palette;         // current palette object
+    let colorCache;      // precomputed rgba strings per color × alpha step
+    const ALPHA_STEPS = 12;
+
+    // ── Noise offset (animated) ──
+    let zOff = 0;
 
     // ══════════════════════════════════════════════════════════════════════
     // SETUP
     // ══════════════════════════════════════════════════════════════════════
     function setup() {
-        // Size canvas to its parent so it adapts to viewport on mobile.
-        const host = document.getElementById('canvas-container');
-        const w = Math.max(280, Math.floor(host.clientWidth || 900));
-        // Square-ish, but never wider than viewport minus padding.
-        const h = Math.max(280, Math.min(w, Math.floor(window.innerHeight - 140)));
-        const cnv = createCanvas(w, h);
-        cnv.parent('canvas-container');
-        pixelDensity(1);             // big FPS win on HiDPI / retina screens
-        const loading = document.querySelector('.loading');
-        if (loading) loading.style.display = 'none';
-        buildSceneTabs();
-        applySceneDefaults(currentSceneIndex, true);
-        initializeSystem();
+        const c = createCanvas(windowWidth, windowHeight);
+        c.parent('canvas-container');
+        pixelDensity(1);
+        ctx = drawingContext;
 
-        // Mobile sidebar drawer behavior
-        const toggle = document.getElementById('sidebar-toggle');
-        const side   = document.getElementById('sidebar');
-        const scrim  = document.getElementById('scrim');
-        const openSidebar  = () => { side.classList.add('open');  scrim.classList.add('show'); };
-        const closeSidebar = () => { side.classList.remove('open'); scrim.classList.remove('show'); };
-        toggle.addEventListener('click', openSidebar);
-        scrim.addEventListener('click', closeSidebar);
-        // Close after picking a scene on mobile
-        document.getElementById('scene-tabs').addEventListener('click', (e) => {
-            if (e.target.closest('.scene-tab')) closeSidebar();
-        });
+        W = width; H = height;
+        rebuildFieldGrid();
+        initParticles(pCount);
+        buildColorCache();
+        applyPalette();
+        applySeed();
+
+        // remove loading text
+        const ld = document.querySelector('.loading');
+        if (ld) ld.remove();
+
+        // fade hint after 5s
+        setTimeout(() => document.getElementById('hint')?.classList.add('fade'), 5500);
     }
 
-    // Resize canvas when viewport changes (orientation / window resize)
     function windowResized() {
-        const host = document.getElementById('canvas-container');
-        const w = Math.max(280, Math.floor(host.clientWidth || width));
-        const h = Math.max(280, Math.min(w, Math.floor(window.innerHeight - 140)));
-        if (Math.abs(w - width) > 1 || Math.abs(h - height) > 1) {
-            resizeCanvas(w, h);
-            initializeSystem();
-        }
+        resizeCanvas(windowWidth, windowHeight);
+        W = width; H = height;
+        rebuildFieldGrid();
+    }
+
+    function rebuildFieldGrid() {
+        cols = Math.ceil(W / cellSize) + 1;
+        rows = Math.ceil(H / cellSize) + 1;
+        fieldX = new Float32Array(cols * rows);
+        fieldY = new Float32Array(cols * rows);
+        densGrid = new Float32Array(cols * rows);
+        const g = cols * rows;
+        windX = new Float32Array(g);
+        windY = new Float32Array(g);
+        windLife = new Float32Array(g);
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // TOUCH / POINTER — attract particles & perturb field
+    // PARTICLE INIT (typed arrays)
     // ══════════════════════════════════════════════════════════════════════
-    function _setPointerFromEvent(e) {
-        const host = document.getElementById('canvas-container');
-        const rect = host.getBoundingClientRect();
-        // p5 canvas is styled width:100%, so scale by display ratio.
-        const sx = width / rect.width;
-        const sy = height / rect.height;
-        let cx, cy;
-        if (e.touches && e.touches.length > 0) {
-            cx = e.touches[0].clientX;
-            cy = e.touches[0].clientY;
-        } else {
-            cx = e.clientX;
-            cy = e.clientY;
-        }
-        pointer.x = (cx - rect.left) * sx;
-        pointer.y = (cy - rect.top) * sy;
-        pointer.active = true;
-        pointer.strength = 1;
-        glowBoost = 1;
+    function initParticles(count) {
+        N = count;
+        px = new Float32Array(N);
+        py = new Float32Array(N);
+        vx = new Float32Array(N);
+        vy = new Float32Array(N);
+        ang = new Float32Array(N);
+        angVel = new Float32Array(N);
+        life = new Float32Array(N);
+        maxLife = new Float32Array(N);
+        alpha = new Float32Array(N);
+        size = new Float32Array(N);
+        hue = new Uint8Array(N);       // palette color index
+        type = new Uint8Array(N);
 
-        // SPAWN interaction: touch spawns new ripple centers at the
-        // touch point (ripple pond scene).
-        const sc = SCENES[currentSceneIndex];
-        if (sc.interaction === 'spawn' && particles.length > 0) {
-            for (let i = 0; i < 4; i++) {
-                const p = particles[Math.floor(random(particles.length))];
-                p.spawnX = pointer.x + random(-8, 8);
-                p.spawnY = pointer.y + random(-8, 8);
-                p.x = p.spawnX;
-                p.y = p.spawnY;
-                p.life = p.maxLife;
+        for (let i = 0; i < N; i++) respawn(i, true);
+    }
+
+    function respawn(i, initial) {
+        px[i] = Math.random() * W;
+        py[i] = Math.random() * H;
+        vx[i] = 0;
+        vy[i] = 0;
+        ang[i] = Math.random() * Math.PI * 2;
+        angVel[i] = (Math.random() - 0.5) * 0.04;
+        maxLife[i] = 200 + Math.random() * 400;
+        life[i] = initial ? Math.random() * maxLife[i] : maxLife[i];
+        alpha[i] = 0;
+        size[i] = 2 + Math.random() * 6;
+        hue[i] = (Math.random() * palette.colors.length) | 0;
+        // type distribution: 25% each
+        type[i] = (Math.random() * TYPES) | 0;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // FLOW FIELD (Perlin noise)
+    // ══════════════════════════════════════════════════════════════════════
+    function computeField() {
+        const ns = noiseScale;
+        let idx = 0;
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                // angle from Perlin noise → flow direction
+                const n = noise(x * ns * cellSize, y * ns * cellSize, zOff);
+                const a = n * Math.PI * 4;  // full rotation range
+                fieldX[idx] = Math.cos(a);
+                fieldY[idx] = Math.sin(a);
+                idx++;
+            }
+        }
+        zOff += 0.0015;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // DENSITY FIELD (particle count per cell → gathering/whitespace)
+    // ══════════════════════════════════════════════════════════════════════
+    function computeDensity() {
+        densGrid.fill(0);
+        for (let i = 0; i < N; i++) {
+            const cx = (px[i] / cellSize) | 0;
+            const cy = (py[i] / cellSize) | 0;
+            if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+                densGrid[cy * cols + cx] += 1;
             }
         }
     }
 
-    function touchStarted() {
-        _setPointerFromEvent(event);
-        return false; // prevent default scroll/zoom
+    function densityAt(cx, cy) {
+        if (cx < 0 || cx >= cols || cy < 0 || cy >= rows) return 0;
+        return densGrid[cy * cols + cx];
     }
-    function touchMoved() {
-        _setPointerFromEvent(event);
+
+    // ══════════════════════════════════════════════════════════════════════
+    // WIND FIELD (drag interaction)
+    // ══════════════════════════════════════════════════════════════════════
+    let lastDragX = 0, lastDragY = 0, dragging = false;
+
+    function applyWind(gx, gy, wx, wy) {
+        const cx = Math.max(0, Math.min(cols - 1, (gx / cellSize) | 0));
+        const cy = Math.max(0, Math.min(rows - 1, (gy / cellSize) | 0));
+        // spread wind to a 3×3 area
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                const nx = cx + dx, ny = cy + dy;
+                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                    const k = ny * cols + nx;
+                    windX[k] += wx * 0.4;
+                    windY[k] += wy * 0.4;
+                    windLife[k] = 30;  // frames of wind lifetime
+                }
+            }
+        }
+    }
+
+    function decayWind() {
+        for (let i = 0; i < windLife.length; i++) {
+            if (windLife[i] > 0) {
+                windLife[i] -= 1;
+                windX[i] *= 0.92;
+                windY[i] *= 0.92;
+                if (windLife[i] <= 0) {
+                    windX[i] = 0;
+                    windY[i] = 0;
+                }
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // SPAWN BURST (tap → new art area)
+    // ══════════════════════════════════════════════════════════════════════
+    function spawnBurst(x, y, count) {
+        // redistribute existing particles toward the click point
+        const c = count || 400;
+        for (let i = 0; i < c; i++) {
+            const idx = (Math.random() * N) | 0;
+            const r = Math.random() * 60;
+            const a = Math.random() * Math.PI * 2;
+            px[idx] = x + Math.cos(a) * r;
+            py[idx] = y + Math.sin(a) * r;
+            vx[idx] = Math.cos(a) * (1 + Math.random() * 2);
+            vy[idx] = Math.sin(a) * (1 + Math.random() * 2);
+            life[idx] = maxLife[idx];
+            // change color & type for fresh visual
+            hue[idx] = (Math.random() * palette.colors.length) | 0;
+            type[idx] = (Math.random() * TYPES) | 0;
+            size[idx] = 2 + Math.random() * 6;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // DRAW LOOP
+    // ══════════════════════════════════════════════════════════════════════
+    function draw() {
+        if (paused) return;
+
+        // ── Trail fade (translucent rectangle over previous frame) ──
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = trailFade;
+        ctx.fillStyle = `rgb(${palette.bg[0]},${palette.bg[1]},${palette.bg[2]})`;
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+
+        // ── Recompute flow field every 2 frames ──
+        if (fieldFrame % 2 === 0) computeField();
+        fieldFrame++;
+
+        // ── Recompute density field every 4 frames ──
+        if (densFrame % 4 === 0) computeDensity();
+        densFrame++;
+
+        // ── Decay wind ──
+        decayWind();
+
+        // ── Update + render particles ──
+        updateAndRender();
+
+        // ── Process spawn bursts ──
+        for (let i = bursts.length - 1; i >= 0; i--) {
+            spawnBurst(bursts[i].x, bursts[i].y, bursts[i].n);
+        }
+        bursts.length = 0;
+    }
+
+    function updateAndRender() {
+        const speed = flowSpeed;
+        const pull = densityPull;
+        const inv = 1 / cellSize;
+        const vmax = 3.5;
+        const cc = colorCache;
+        const stepMax = ALPHA_STEPS - 1;
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineCap = 'round';
+
+        for (let i = 0; i < N; i++) {
+            // ── UPDATE ──
+            const cx = (px[i] * inv) | 0;
+            const cy = (py[i] * inv) | 0;
+            const gi = (cx >= 0 && cx < cols && cy >= 0 && cy < rows) ? (cy * cols + cx) : -1;
+
+            let fx = 0, fy = 0;
+            if (gi >= 0) {
+                fx = fieldX[gi] * speed * 0.35;
+                fy = fieldY[gi] * speed * 0.35;
+
+                // Density diffusion: overcrowded cells push particles apart (whitespace),
+                // sparse cells let flow gather them naturally (gathering).
+                if (pull > 0) {
+                    const d = densGrid[gi];
+                    if (d > 4) {
+                        fx += (Math.random() - 0.5) * pull * 0.4;
+                        fy += (Math.random() - 0.5) * pull * 0.4;
+                    }
+                }
+
+                if (windLife[gi] > 0) {
+                    fx += windX[gi] * 0.5;
+                    fy += windY[gi] * 0.5;
+                }
+            }
+
+            vx[i] = vx[i] * 0.92 + fx;
+            vy[i] = vy[i] * 0.92 + fy;
+
+            const vmag = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]);
+            if (vmag > vmax) {
+                const s = vmax / vmag;
+                vx[i] *= s; vy[i] *= s;
+            }
+
+            px[i] += vx[i];
+            py[i] += vy[i];
+            ang[i] += angVel[i] + vmag * 0.02;
+
+            life[i] -= 1;
+            const lr = life[i] / maxLife[i];
+            let a = 1;
+            if (lr > 0.85) a = (1 - lr) / 0.15;
+            else if (lr < 0.2) a = lr / 0.2;
+            const al = a * 0.65;
+
+            if (px[i] < -10) px[i] = W + 10;
+            else if (px[i] > W + 10) px[i] = -10;
+            if (py[i] < -10) py[i] = H + 10;
+            else if (py[i] > H + 10) py[i] = -10;
+
+            if (life[i] <= 0) { respawn(i, false); continue; }
+            if (al < 0.02) continue;
+
+            // ── RENDER ── (single pass, globalAlpha for translucency)
+            const sIdx = lr > 1 ? stepMax : (lr < 0 ? 0 : (lr * stepMax) | 0);
+            const cs = cc[hue[i]][sIdx];
+            ctx.globalAlpha = al;
+            ctx.fillStyle = cs;
+            ctx.strokeStyle = cs;
+
+            const s = size[i];
+            const ti = type[i];
+
+            ctx.save();
+            ctx.translate(px[i], py[i]);
+            ctx.rotate(ang[i]);
+
+            if (ti === 0) {
+                // PETAL — translucent curved shape
+                ctx.beginPath();
+                ctx.moveTo(0, -s * 0.5);
+                ctx.quadraticCurveTo(s * 0.8, 0, 0, s * 0.5);
+                ctx.quadraticCurveTo(-s * 0.4, 0, 0, -s * 0.5);
+                ctx.fill();
+            } else if (ti === 1) {
+                // PAPER — tiny rotated rectangle
+                ctx.fillRect(-s * 0.5, -s * 0.25, s, s * 0.5);
+            } else if (ti === 2) {
+                // LINE — thin velocity streak
+                ctx.lineWidth = Math.max(0.5, s * 0.15);
+                ctx.beginPath();
+                ctx.moveTo(-vx[i] * 1.5, -vy[i] * 1.5);
+                ctx.lineTo(vx[i] * 1.5, vy[i] * 1.5);
+                ctx.stroke();
+            } else {
+                // FRAGMENT — triangle
+                ctx.beginPath();
+                ctx.moveTo(0, -s * 0.6);
+                ctx.lineTo(s * 0.55, s * 0.4);
+                ctx.lineTo(-s * 0.55, s * 0.4);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // COLOR CACHE (precomputed rgba strings per color × alpha step)
+    // ══════════════════════════════════════════════════════════════════════
+    function buildColorCache() {
+        // Precompute interpolated rgb strings along lifecycle (color → next color).
+        // Indexing: colorCache[colorIdx][lifeStep] → "rgb(r,g,b)" string.
+        // Avoids per-frame string concatenation in the hot render loop.
+        colorCache = [];
+        const C = palette.colors;
+        for (let c = 0; c < C.length; c++) {
+            const c1 = C[c];
+            const c2 = C[(c + 1) % C.length];
+            const row = [];
+            for (let s = 0; s < ALPHA_STEPS; s++) {
+                const t = s / (ALPHA_STEPS - 1);
+                const r = (c1[0] * t + c2[0] * (1 - t)) | 0;
+                const g = (c1[1] * t + c2[1] * (1 - t)) | 0;
+                const b = (c1[2] * t + c2[2] * (1 - t)) | 0;
+                row.push(`rgb(${r},${g},${b})`);
+            }
+            colorCache.push(row);
+        }
+    }
+
+    function applyPalette() {
+        palette = PALETTES[palIdx];
+        buildColorCache();
+        // update background of canvas container
+        document.getElementById('canvas-container').style.background =
+            `rgb(${palette.bg[0]},${palette.bg[1]},${palette.bg[2]})`;
+        document.getElementById('tc-palette').textContent = palette.name;
+        // rebuild palette chips UI
+        buildPaletteUI();
+    }
+
+    function applySeed() {
+        noiseSeed(seed);
+        randomSeed(seed);
+        zOff = seed * 0.0001;
+        document.getElementById('tc-seed').textContent = seed;
+        document.getElementById('seed-input').value = seed;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // INTERACTION (mouse + touch)
+    // ══════════════════════════════════════════════════════════════════════
+    function mouseDragged() {
+        const dx = mouseX - lastDragX;
+        const dy = mouseY - lastDragY;
+        if (Math.abs(dx) + Math.abs(dy) > 1) {
+            applyWind(mouseX, mouseY, dx * 0.4, dy * 0.4);
+        }
+        lastDragX = mouseX;
+        lastDragY = mouseY;
         return false;
     }
-    function touchEnded() {
-        pointer.active = false;
-        pointer.strength = 0;
-        return false;
-    }
-    // Mouse mirrors for desktop
+
     function mousePressed() {
-        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-            _setPointerFromEvent(event);
+        lastDragX = mouseX;
+        lastDragY = mouseY;
+        dragging = true;
+        return false;
+    }
+
+    function mouseReleased() {
+        if (dragging) {
+            // tap (no significant drag) → spawn burst
+            const dx = Math.abs(mouseX - lastDragX);
+            const dy = Math.abs(mouseY - lastDragY);
+            if (dx < 8 && dy < 8) {
+                bursts.push({ x: mouseX, y: mouseY, n: 300 });
+            }
         }
-    }
-    function mouseDragged() { _setPointerFromEvent(event); }
-    function mouseReleased() { pointer.active = false; pointer.strength = 0; }
-
-    // Pre-convert the active scene palette to raw RGB arrays so the hot
-    // particle loop never calls p5.color()/red()/green()/blue() per frame.
-    function buildPaletteCache() {
-        const sc = SCENES[currentSceneIndex];
-        paletteRGB = sc.palette.map(hex => {
-            const c = color(hex);
-            return [red(c), green(c), blue(c)];
-        });
+        dragging = false;
+        return false;
     }
 
-    // Pre-render a soft radial-gradient sprite per palette color. Each
-    // particle becomes a glowing bokeh orb (xiaohongshu "vibecoding" vibe)
-    // rather than a hard line. Blitting these via drawImage is cheap and
-    // the ADD blend lets overlapping orbs bloom into dreamy halos.
-    let glowSprites = [];
-    function buildGlowSprites() {
-        glowSprites = paletteRGB.map(rgb => {
-            const S = 64;
-            const g = createGraphics(S, S);
-            const ctx = g.drawingContext;
-            const grad = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
-            grad.addColorStop(0.00, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},1)`);
-            grad.addColorStop(0.25, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0.45)`);
-            grad.addColorStop(0.60, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0.10)`);
-            grad.addColorStop(1.00, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0)`);
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, S, S);
-            return g;
-        });
-    }
+    function touchStarted() { mousePressed(); return false; }
+    function touchMoved() { mouseDragged(); return false; }
+    function touchEnded() { mouseReleased(); return false; }
 
-    // Slow-drifting background bokeh lights for depth (the "soft light
-    // effects" in the reference image).
-    let bokehLights = [];
-    function buildBokehLights() {
-        bokehLights = [];
-        const n = 26;
-        for (let i = 0; i < n; i++) {
-            bokehLights.push({
-                x: random(width),
-                y: random(height),
-                r: random(40, 120),
-                vx: random(-0.25, 0.25),
-                vy: random(-0.20, 0.20),
-                colorIdx: floor(random(5)),
-                phase: random(TWO_PI),
-                pulseSpeed: random(0.005, 0.015)
-            });
-        }
-    }
-
-    function buildSceneTabs() {
-        const wrap = document.getElementById('scene-tabs');
+    // ══════════════════════════════════════════════════════════════════════
+    // UI WIRING
+    // ══════════════════════════════════════════════════════════════════════
+    function buildPaletteUI() {
+        const wrap = document.getElementById('palettes');
         wrap.innerHTML = '';
-        SCENES.forEach((s, i) => {
-            const tab = document.createElement('div');
-            tab.className = 'scene-tab' + (i === currentSceneIndex ? ' active' : '');
-            tab.dataset.idx = i;
-            const grad = 'linear-gradient(90deg,' + s.palette.map(c => c).join(',') + ')';
-            tab.innerHTML = '<span class="swatch" style="background:' + grad + '"></span>' + s.name;
-            tab.onclick = () => selectScene(i);
-            wrap.appendChild(tab);
+        PALETTES.forEach((p, i) => {
+            const chip = document.createElement('button');
+            chip.className = 'palette-chip' + (i === palIdx ? ' active' : '');
+            const sw = document.createElement('div');
+            sw.className = 'palette-swatches';
+            p.colors.slice(0, 5).forEach(c => {
+                const sp = document.createElement('span');
+                sp.style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
+                sw.appendChild(sp);
+            });
+            chip.appendChild(sw);
+            const nm = document.createElement('div');
+            nm.className = 'palette-name';
+            nm.textContent = p.name;
+            chip.appendChild(nm);
+            chip.onclick = () => {
+                palIdx = i;
+                applyPalette();
+            };
+            wrap.appendChild(chip);
         });
-    }
-
-    function selectScene(i) {
-        currentSceneIndex = i;
-        document.querySelectorAll('.scene-tab').forEach((el, idx) => {
-            el.classList.toggle('active', idx === i);
-        });
-        applySceneDefaults(i, true);
-        initializeSystem();
-        document.getElementById('scene-name').textContent = SCENES[i].name;
-    }
-
-    function applySceneDefaults(i, syncUI) {
-        const d = SCENES[i].defaults;
-        params.particleCount = d.particleCount;
-        params.flowSpeed = d.flowSpeed;
-        params.noiseScale = d.noiseScale;
-        params.trailLength = d.trailLength;
-        params.fieldStrength = d.fieldStrength;
-        if (syncUI) {
-            setSlider('particleCount', d.particleCount);
-            setSlider('flowSpeed', d.flowSpeed);
-            setSlider('noiseScale', d.noiseScale, 4);
-            setSlider('trailLength', d.trailLength);
-            setSlider('fieldStrength', d.fieldStrength);
-        }
-    }
-
-    function setSlider(id, val, decimals) {
-        const el = document.getElementById(id);
-        const disp = document.getElementById(id + '-value');
-        if (el) el.value = val;
-        if (disp) disp.textContent = (decimals != null) ? Number(val).toFixed(decimals) : val;
-    }
-
-    function initializeSystem() {
-        randomSeed(params.seed);
-        noiseSeed(params.seed);
-        particles = [];
-        cols = Math.floor(width / scl);
-        rows = Math.floor(height / scl);
-        field = new Array(cols * rows);
-        const sc = SCENES[currentSceneIndex];
-        // Reset blend mode before painting the background so a leftover
-        // ADD state from the previous draw never blows out the canvas.
-        blendMode(BLEND);
-        background(sc.bg[0], sc.bg[1], sc.bg[2]);
-        buildPaletteCache();
-        buildGlowSprites();
-        buildBokehLights();
-        for (let i = 0; i < params.particleCount; i++) {
-            particles.push(new Particle());
-        }
-        document.getElementById('scene-seed').textContent = params.seed;
-        document.getElementById('scene-name').textContent = sc.name;
     }
 
     function regenerate() {
-        initializeSystem();
+        initParticles(pCount);
+        applySeed();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // FIELD COMPUTATION per scene
-    // ══════════════════════════════════════════════════════════════════════
-    function computeField() {
-        const sc = SCENES[currentSceneIndex];
-        const mode = sc.field;
-        const ns = params.noiseScale;
-        zoff += 0.001;
-        const cx = width / 2, cy = height / 2;
+    // ── Wire DOM events ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const panel = document.getElementById('panel');
+        const scrim = document.getElementById('scrim');
+        const toggle = document.getElementById('panel-toggle');
 
-        for (let y = 0; y < rows; y++) {
-            for (let x = 0; x < cols; x++) {
-                let ang;
-                const px = x * scl, py = y * scl;
+        const openPanel = () => { panel.classList.add('open'); scrim.classList.add('show'); };
+        const closePanel = () => { panel.classList.remove('open'); scrim.classList.remove('show'); };
 
-                if (mode === 'flow') {
-                    ang = noise(x * ns, y * ns, zoff) * TWO_PI * 2;
-                } else if (mode === 'curl') {
-                    // curl-style: two noise layers combined -> turbulent
-                    const n1 = noise(x * ns, y * ns, zoff);
-                    const n2 = noise((x + 10) * ns, (y + 10) * ns, zoff);
-                    ang = (n1 + n2) * TWO_PI * 2;
-                } else if (mode === 'radial') {
-                    // solar bloom: tangential + radial outflow
-                    const dx = px - cx, dy = py - cy;
-                    const r = Math.sqrt(dx * dx + dy * dy) + 0.001;
-                    const baseAng = Math.atan2(dy, dx);
-                    const swirl = noise(x * ns, y * ns, zoff) * 1.2;
-                    ang = baseAng + Math.PI / 2 + swirl;
-                } else if (mode === 'hex') {
-                    // hex/crystal: angular field locked to 6-fold symmetry
-                    const n = noise(x * ns, y * ns, zoff);
-                    ang = Math.floor(n * 6) / 6 * TWO_PI;
-                } else if (mode === 'wave') {
-                    // aurora: layered sine waves drifting in x
-                    const wave = Math.sin(px * ns * 4 + zoff * 30) * 0.5 + 0.5;
-                    ang = (-Math.PI / 2) + (noise(x * ns, y * ns, zoff) - 0.5) * Math.PI + wave * Math.PI;
-                } else {
-                    ang = noise(x * ns, y * ns, zoff) * TWO_PI;
-                }
-                const idx = x + y * cols;
-                field[idx] = { x: Math.cos(ang), y: Math.sin(ang) };
-            }
-        }
-    }
+        toggle.onclick = openPanel;
+        scrim.onclick = closePanel;
 
-    function lookupField(px, py) {
-        const x = Math.max(0, Math.min(cols - 1, Math.floor(px / scl)));
-        const y = Math.max(0, Math.min(rows - 1, Math.floor(py / scl)));
-        return field[x + y * cols] || { x: 0, y: 0 };
-    }
+        // Seed controls
+        document.getElementById('seed-input').addEventListener('change', e => {
+            seed = parseInt(e.target.value) || 1;
+            applySeed();
+        });
+        document.getElementById('seed-prev').onclick = () => { seed -= 1; applySeed(); };
+        document.getElementById('seed-next').onclick = () => { seed += 1; applySeed(); };
+        document.getElementById('seed-random').onclick = () => {
+            seed = Math.floor(Math.random() * 999999);
+            applySeed();
+        };
 
-    // ══════════════════════════════════════════════════════════════════════
-    // DRAW
-    // ══════════════════════════════════════════════════════════════════════
-    function draw() {
-        const sc = SCENES[currentSceneIndex];
-        // Background fade — higher floor so trails clear faster and the
-        // image stays crisp instead of accumulating into blur.
-        const fadeAlpha = Math.max(16, 42 - params.trailLength);
+        // Sliders
+        const bind = (sid, vid, fmt, onChange) => {
+            const s = document.getElementById(sid);
+            const v = document.getElementById(vid);
+            s.addEventListener('input', () => {
+                const val = parseFloat(s.value);
+                v.textContent = fmt(val);
+                onChange(val);
+            });
+        };
+        bind('s-count', 'v-count', v => v.toFixed(0), v => { pCount = v|0; });
+        bind('s-speed', 'v-speed', v => v.toFixed(1), v => { flowSpeed = v; });
+        bind('s-noise', 'v-noise', v => v.toFixed(4), v => { noiseScale = v; });
+        bind('s-density', 'v-density', v => v.toFixed(1), v => { densityPull = v; });
+        bind('s-trail', 'v-trail', v => v.toFixed(2), v => { trailFade = v; });
 
-        // 1) Fade rect in normal blend mode (so trails decay correctly).
-        blendMode(BLEND);
-        noStroke();
-        fill(sc.bg[0], sc.bg[1], sc.bg[2], fadeAlpha);
-        rect(0, 0, width, height);
-
-        // Recompute the flow field every 2nd frame — only for scenes that
-        // use a field (ripple & rain have field='none', skip the cost).
-        if (sc.field !== 'none' && frameCount % 2 === 0) computeField();
-        t += 0.01;
-
-        // Auto-spawn ripples periodically so the pond is always alive even
-        // without touch input.
-        if (sc.render === 'ripple' && frameCount % 35 === 0) {
-            for (let i = 0; i < 2; i++) {
-                const p = particles[Math.floor(random(particles.length))];
-                p.spawnX = random(width);
-                p.spawnY = random(height);
-                p.x = p.spawnX;
-                p.y = p.spawnY;
-                p.life = p.maxLife;
-            }
-        }
-
-        // 2) Subtle background depth dots — crisp small points, NOT big
-        //    blurry halos. Adds depth without smearing the frame.
-        const particleBlend = sc.blend === 'ADD' ? ADD : BLEND;
-        blendMode(particleBlend);
-        const pal0 = paletteRGB;
-        noStroke();
-        for (let i = 0; i < bokehLights.length; i++) {
-            const b = bokehLights[i];
-            b.x += b.vx;
-            b.y += b.vy;
-            b.phase += b.pulseSpeed;
-            if (b.x < 0) b.x = width; else if (b.x > width) b.x = 0;
-            if (b.y < 0) b.y = height; else if (b.y > height) b.y = 0;
-            const cc = pal0[b.colorIdx % pal0.length];
-            const pulse = 0.5 + 0.5 * Math.sin(b.phase);
-            fill(cc[0], cc[1], cc[2], 26 * pulse);
-            ellipse(b.x, b.y, 3 + pulse * 2);
-        }
-
-        // 3) Pointer attractor indicator — crisp small ring, not a blur.
-        //    Pick a contrasting color: darkest on light bg, lightest on dark.
-        if (pointer.active && glowBoost > 0.01) {
-            const hc = sc.blend === 'ADD'
-                ? (pal0[pal0.length - 1] || [255, 240, 220])
-                : (pal0[0] || [20, 20, 20]);
-            noFill();
-            stroke(hc[0], hc[1], hc[2], 160 * glowBoost);
-            strokeWeight(1.4);
-            const rr = Math.min(width, height) * 0.045 * (1 + glowBoost * 0.5);
-            ellipse(pointer.x, pointer.y, rr * 2);
-            glowBoost *= 0.90;
-        }
-
-        // 4) Particles — for connect scenes (ink), update ALL particles
-        //    first, then draw organic branching lines, then draw nodes.
-        //    Other scenes update + draw each particle inline.
-        blendMode(particleBlend);
-        drawingContext.lineCap = 'round';
-
-        const pal = paletteRGB;
-        if (sc.connect) {
-            for (let i = 0, n = particles.length; i < n; i++) particles[i].update();
-            drawConnections(pal);
-            for (let i = 0, n = particles.length; i < n; i++) particles[i].display(pal);
-        } else {
-            for (let i = 0, n = particles.length; i < n; i++) {
-                const p = particles[i];
-                p.update();
-                p.display(pal);
-            }
-        }
-        drawingContext.globalAlpha = 1;
-
-        // Reset to default blend so the next frame's fade rect behaves.
-        blendMode(BLEND);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // CONNECTIONS — spatial-hash connecting lines between nearby particles.
-    // Used by the ink scene to create organic branching structures.
-    // Drawn once per frame AFTER all particles are updated.
-    // ══════════════════════════════════════════════════════════════════════
-    function drawConnections(pal) {
-        const cellSize = 48;
-        const maxD = 48, maxD2 = maxD * maxD;
-        const map = new Map();
-        for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-            const key = (Math.floor(p.x / cellSize)) * 100000 + Math.floor(p.y / cellSize);
-            let cell = map.get(key);
-            if (!cell) { cell = []; map.set(key, cell); }
-            cell.push(i);
-        }
-        strokeWeight(0.6);
-        for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-            const cx = Math.floor(p.x / cellSize);
-            const cy = Math.floor(p.y / cellSize);
-            for (let dx = -1; dx <= 1; dx++) {
-                for (let dy = -1; dy <= 1; dy++) {
-                    const cell = map.get((cx + dx) * 100000 + (cy + dy));
-                    if (!cell) continue;
-                    for (let m = 0; m < cell.length; m++) {
-                        const j = cell[m];
-                        if (j <= i) continue;
-                        const q = particles[j];
-                        const ddx = p.x - q.x, ddy = p.y - q.y;
-                        const d2 = ddx * ddx + ddy * ddy;
-                        if (d2 > maxD2) continue;
-                        const t = 1 - d2 / maxD2;
-                        const c = pal[((p.colorIdx + q.colorIdx) >> 1) % pal.length];
-                        stroke(c[0], c[1], c[2], t * 90);
-                        line(p.x, p.y, q.x, q.y);
-                    }
-                }
-            }
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // PARTICLE — each scene has a fully distinct algorithm (spawn),
-    // motion (update), and visual style (display). No two scenes share
-    // the same particle behaviour, matching the reference image's 9-grid
-    // where every cell is a separate generative artwork.
-    // ══════════════════════════════════════════════════════════════════════
-    class Particle {
-        constructor() {
-            this.reset();
-            this.life = random(this.maxLife);
-        }
-        reset() {
-            const sc = SCENES[currentSceneIndex];
-            this.render = sc.render;
-            this.fieldType = sc.field;
-            this.interaction = sc.interaction;
-
-            if (this.render === 'ripple') {
-                // Ripple: spawn at a point, expand outward as rings.
-                this.spawnX = random(width);
-                this.spawnY = random(height);
-                this.x = this.spawnX;
-                this.y = this.spawnY;
-                this.maxLife = random(140, 240);
-                this.maxRadius = random(25, Math.min(width, height) * 0.28);
-            } else if (this.render === 'rain') {
-                // Rain: start above the canvas, fall diagonally.
-                this.x = random(-60, width + 60);
-                this.y = random(-height, 0);
-                this.maxLife = random(300, 600);
-            } else if (this.render === 'crystal') {
-                // Crystal: scattered node with rotation + pulse.
-                this.x = random(width);
-                this.y = random(height);
-                this.angle = random(TWO_PI);
-                this.rotSpeed = random(-0.006, 0.006);
-                this.pulsePhase = random(TWO_PI);
-                this.baseSize = random(4, 11);
-                this.maxLife = random(400, 800);
-            } else if (this.render === 'ink') {
-                // Ink: start near center, flow outward organically.
-                const r = random(0, width * 0.14);
-                const a = random(TWO_PI);
-                this.x = width / 2 + Math.cos(a) * r;
-                this.y = height / 2 + Math.sin(a) * r;
-                this.maxLife = random(80, 220);
-            } else {
-                // Petal: scattered, slow drift with rotation.
-                this.x = random(width);
-                this.y = random(height);
-                this.angle = random(TWO_PI);
-                this.rotSpeed = random(-0.012, 0.012);
-                this.maxLife = random(250, 550);
-            }
-            this.px = this.x;
-            this.py = this.y;
-            this.vx = 0;
-            this.vy = 0;
-            this.life = this.maxLife;
-            this.colorIdx = floor(random(5));
-        }
-        update() {
-            this.px = this.x;
-            this.py = this.y;
-            const sc = SCENES[currentSceneIndex];
-
-            // ── RIPPLE: no motion, just expand & fade ──────────────────
-            if (this.render === 'ripple') {
-                this.life--;
-                if (this.life <= 0) this.reset();
-                return;
-            }
-
-            // ── RAIN: constant diagonal fall + wind interaction ───────
-            if (this.render === 'rain') {
-                const ang = Math.PI * 0.28;
-                this.vx = Math.cos(ang) * params.flowSpeed * 2.6;
-                this.vy = Math.sin(ang) * params.flowSpeed * 2.6;
-                // subtle noise variation so streaks aren't perfectly parallel
-                this.vx += (noise(this.x * 0.008, this.y * 0.008) - 0.5) * 0.4;
-                this.vy += (noise(this.x * 0.008 + 99, this.y * 0.008) - 0.5) * 0.3;
-                // WIND interaction: deflect streaks away from pointer
-                if (pointer.active) {
-                    const dx = this.x - pointer.x;
-                    const dy = this.y - pointer.y;
-                    const d2 = dx * dx + dy * dy;
-                    const R = Math.min(width, height) * 0.22;
-                    if (d2 < R * R) {
-                        const d = Math.sqrt(d2) + 0.001;
-                        const push = (1 - d / R) * 4 * pointer.strength;
-                        this.vx += (dx / d) * push;
-                        this.vy += (dy / d) * push;
-                    }
-                }
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life--;
-                // recycle when off-screen
-                if (this.y > height + 30 || this.x > width + 30) {
-                    this.x = random(-60, width * 0.4);
-                    this.y = random(-height * 0.25, -10);
-                    this.life = this.maxLife;
-                }
-                return;
-            }
-
-            // ── PETAL / CRYSTAL / INK: flow-field driven ───────────────
-            if (this.fieldType !== 'none') {
-                const f = lookupField(this.x, this.y);
-                this.vx += f.x * params.fieldStrength * 0.15;
-                this.vy += f.y * params.fieldStrength * 0.15;
-            }
-
-            // Per-scene touch interaction
-            if (pointer.active) {
-                const dx = pointer.x - this.x;
-                const dy = pointer.y - this.y;
-                const d2 = dx * dx + dy * dy;
-                const R = Math.min(width, height) * 0.4;
-                if (d2 < R * R) {
-                    const d = Math.sqrt(d2) + 0.001;
-                    const t = 1 - d / R;
-                    if (this.interaction === 'swirl') {
-                        // SWIRL: tangential force → vortex (petal scene)
-                        const pull = t * 1.4 * pointer.strength;
-                        this.vx += (-dy / d) * pull;
-                        this.vy += (dx / d) * pull;
-                    } else if (this.interaction === 'grow') {
-                        // GROW: pulse faster + slight pull (crystal scene)
-                        this.pulsePhase += 0.06;
-                        const pull = t * 0.3 * pointer.strength;
-                        this.vx += (dx / d) * pull;
-                        this.vy += (dy / d) * pull;
-                    } else if (this.interaction === 'attract') {
-                        // ATTRACT: pull toward pointer (ink scene)
-                        const pull = t * 0.9 * pointer.strength;
-                        this.vx += (dx / d) * pull;
-                        this.vy += (dy / d) * pull;
-                    }
-                }
-            }
-
-            // Rotation for petal & crystal
-            if (this.render === 'petal') {
-                this.angle += this.rotSpeed
-                    + (noise(this.x * 0.01, this.y * 0.01) - 0.5) * 0.025;
-            } else if (this.render === 'crystal') {
-                this.angle += this.rotSpeed;
-                this.pulsePhase += 0.025;
-            }
-
-            // Damping + integrate
-            this.vx *= 0.92;
-            this.vy *= 0.92;
-            this.x += this.vx * params.flowSpeed;
-            this.y += this.vy * params.flowSpeed;
-            this.life--;
-            if (this.life <= 0 ||
-                this.x < -30 || this.x > width + 30 ||
-                this.y < -30 || this.y > height + 30) {
-                this.reset();
-            }
-        }
-        display(pal) {
-            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-            const age = this.life / this.maxLife;          // 1 → 0
-            let idx = this.colorIdx;
-            if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
-            const c = pal[idx % pal.length];
-
-            switch (this.render) {
-                // ── RIPPLE: 4 nested concentric rings expanding ────────
-                case 'ripple': {
-                    const progress = 1 - age;
-                    const baseR = progress * this.maxRadius;
-                    const fade = (1 - progress) * (1 - progress * 0.3);
-                    noFill();
-                    strokeWeight(1.3);
-                    for (let k = 0; k < 4; k++) {
-                        const r = baseR - k * 6;
-                        if (r > 1) {
-                            stroke(c[0], c[1], c[2],
-                                   220 * fade * (1 - k * 0.22));
-                            ellipse(this.spawnX, this.spawnY, r * 2);
-                        }
-                    }
-                    noStroke();
-                    fill(c[0], c[1], c[2], 180 * fade);
-                    ellipse(this.spawnX, this.spawnY, 2.5);
-                    break;
-                }
-                // ── PETAL: small rotated rectangle ─────────────────────
-                case 'petal': {
-                    push();
-                    translate(this.x, this.y);
-                    rotate(this.angle);
-                    noStroke();
-                    fill(c[0], c[1], c[2],
-                         Math.min(255, 120 + age * 100));
-                    const w = 4 + Math.min(speed, 3) * 0.6;
-                    const h = 2 + Math.min(speed, 3) * 0.3;
-                    rect(-w / 2, -h / 2, w, h);
-                    pop();
-                    break;
-                }
-                // ── RAIN: thin diagonal streak (prev → current) ────────
-                case 'rain': {
-                    stroke(c[0], c[1], c[2],
-                           Math.min(255, 90 + age * 140));
-                    strokeWeight(0.9);
-                    line(this.px, this.py, this.x, this.y);
-                    break;
-                }
-                // ── CRYSTAL: translucent pulsing hexagon + outline ──────
-                case 'crystal': {
-                    const pulse = 1 + 0.3 * Math.sin(this.pulsePhase);
-                    const fsize = this.baseSize * pulse + speed * 1.5;
-                    const ca = Math.cos(this.angle);
-                    const sa = Math.sin(this.angle);
-                    noStroke();
-                    fill(c[0], c[1], c[2], 25 + age * 30);
-                    beginShape();
-                    for (let k = 0; k < 6; k++) {
-                        const a = k / 6 * TWO_PI;
-                        const lx = Math.cos(a) * fsize;
-                        const ly = Math.sin(a) * fsize;
-                        vertex(this.x + lx * ca - ly * sa,
-                               this.y + lx * sa + ly * ca);
-                    }
-                    endShape(CLOSE);
-                    stroke(c[0], c[1], c[2], 110);
-                    strokeWeight(0.7);
-                    noFill();
-                    beginShape();
-                    for (let k = 0; k < 6; k++) {
-                        const a = k / 6 * TWO_PI;
-                        const lx = Math.cos(a) * fsize;
-                        const ly = Math.sin(a) * fsize;
-                        vertex(this.x + lx * ca - ly * sa,
-                               this.y + lx * sa + ly * ca);
-                    }
-                    endShape(CLOSE);
-                    break;
-                }
-                // ── INK: dot + trail (connections drawn separately) ──────
-                case 'ink': {
-                    stroke(c[0], c[1], c[2],
-                           Math.min(255, 40 + age * 80));
-                    strokeWeight(0.8 + Math.min(speed, 4) * 0.15);
-                    line(this.px, this.py, this.x, this.y);
-                    noStroke();
-                    fill(c[0], c[1], c[2],
-                         Math.min(255, 140 + age * 80));
-                    ellipse(this.x, this.y, 2.2 + Math.min(speed, 4) * 0.4);
-                    break;
-                }
-            }
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // UI HANDLERS
-    // ══════════════════════════════════════════════════════════════════════
-    function updateParam(name, value) {
-        if (name === 'particleCount') {
-            params.particleCount = parseInt(value);
-            document.getElementById('particleCount-value').textContent = value;
-            // resize particle array
-            if (particles.length < params.particleCount) {
-                while (particles.length < params.particleCount) particles.push(new Particle());
-            } else {
-                particles.length = params.particleCount;
-            }
-        } else if (name === 'noiseScale') {
-            params.noiseScale = parseFloat(value);
-            document.getElementById('noiseScale-value').textContent = Number(value).toFixed(4);
-        } else if (name === 'flowSpeed') {
-            params.flowSpeed = parseFloat(value);
-            document.getElementById('flowSpeed-value').textContent = Number(value).toFixed(1);
-        } else if (name === 'trailLength') {
-            params.trailLength = parseInt(value);
-            document.getElementById('trailLength-value').textContent = value;
-        } else if (name === 'fieldStrength') {
-            params.fieldStrength = parseFloat(value);
-            document.getElementById('fieldStrength-value').textContent = Number(value).toFixed(1);
-        }
-    }
-
-    function updateSeedDisplay() {
-        document.getElementById('seed-input').value = params.seed;
-        document.getElementById('scene-seed').textContent = params.seed;
-    }
-    function updateSeed() {
-        const v = parseInt(document.getElementById('seed-input').value);
-        if (v && v > 0) {
-            params.seed = v;
-            initializeSystem();
-        } else {
-            updateSeedDisplay();
-        }
-    }
-    function previousSeed() {
-        params.seed = Math.max(1, params.seed - 1);
-        updateSeedDisplay();
-        initializeSystem();
-    }
-    function nextSeed() {
-        params.seed = params.seed + 1;
-        updateSeedDisplay();
-        initializeSystem();
-    }
-    function randomSeedAndUpdate() {
-        params.seed = Math.floor(Math.random() * 999999) + 1;
-        updateSeedDisplay();
-        initializeSystem();
-    }
-    function resetParameters() {
-        applySceneDefaults(currentSceneIndex, true);
-        updateSeedDisplay();
-        initializeSystem();
-    }
-    function downloadPNG() {
-        saveCanvas('prismatic-genesis-' + SCENES[currentSceneIndex].key + '-seed' + params.seed, 'png');
-    }
-
-    window.addEventListener('load', function () {
-        updateSeedDisplay();
+        // Buttons
+        document.getElementById('btn-regenerate').onclick = regenerate;
+        document.getElementById('btn-pause').onclick = e => {
+            paused = !paused;
+            e.target.textContent = paused ? 'Resume' : 'Pause';
+        };
+        document.getElementById('btn-save').onclick = () => {
+            saveCanvas('flow-field-genesis', 'png');
+        };
     });
     </script>
 </body>
