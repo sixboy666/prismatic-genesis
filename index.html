@@ -603,10 +603,9 @@
 
         W = width; H = height;
         rebuildFieldGrid();
+        applyPalette();   // sets `palette` + builds color cache BEFORE particles use it
+        applySeed();      // seed RNG + noise BEFORE particle init so seed shapes the world
         initParticles(pCount);
-        buildColorCache();
-        applyPalette();
-        applySeed();
 
         // remove loading text
         const ld = document.querySelector('.loading');
@@ -1023,8 +1022,8 @@
     }
 
     function regenerate() {
-        initParticles(pCount);
         applySeed();
+        initParticles(pCount);
     }
 
     // ── Wire DOM events ──
