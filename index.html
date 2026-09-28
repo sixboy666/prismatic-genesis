@@ -113,6 +113,14 @@
 
         .hint-pill.fade { opacity: 0; }
 
+        /* Dark-palette mode: light text on dark backgrounds */
+        body.dark-pal .title-card h1 { color: #f5f3ee; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        body.dark-pal .title-card .meta { color: rgba(245,243,238,0.6); }
+        body.dark-pal .title-card .meta b { color: #e8a060; }
+        body.dark-pal .panel-toggle { background: rgba(20,20,20,0.6); color: #f5f3ee; border-color: rgba(255,255,255,0.15); }
+        body.dark-pal .panel-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        body.dark-pal .hint-pill { background: rgba(245,243,238,0.85); color: #1a1a1a; }
+
         /* ── Gear button (opens panel) ── */
         .panel-toggle {
             position: fixed;
@@ -495,55 +503,57 @@
     // Density field modulates gathering and whitespace.
     // ══════════════════════════════════════════════════════════════════════
 
-    // ── Curated palettes (soft, minimalist, exhibition-style) ──
+    // ── Curated palettes matching the 9-grid reference image ──
+    //   dark: true  → dark background, particles use ADD blend (luminous)
+    //   dark: false → light background, particles use BLEND (source-over)
     const PALETTES = [
         {
-            name: 'Misty',
+            name: 'Cyan Bloom',
             colors: [
-                [168, 184, 200], [143, 165, 184], [196, 208, 220],
-                [224, 213, 200], [120, 136, 152], [88, 104, 124]
+                [80, 200, 160], [240, 200, 60], [180, 220, 240],
+                [120, 180, 100], [255, 240, 180], [60, 140, 180]
             ],
-            bg: [238, 234, 228]
+            bg: [185, 225, 230], dark: false
         },
         {
-            name: 'Autumn',
+            name: 'Scatter',
             colors: [
-                [200, 152, 120], [184, 120, 88], [212, 168, 136],
-                [232, 208, 176], [168, 104, 72], [120, 72, 48]
+                [220, 160, 50], [200, 80, 60], [60, 50, 50],
+                [230, 120, 40], [180, 200, 80], [240, 200, 140]
             ],
-            bg: [240, 232, 222]
+            bg: [245, 240, 228], dark: false
         },
         {
-            name: 'Iris',
+            name: 'Coral',
             colors: [
-                [136, 104, 168], [168, 136, 200], [200, 168, 224],
-                [120, 88, 160], [96, 72, 128], [216, 196, 232]
+                [200, 60, 50], [220, 100, 80], [240, 160, 130],
+                [180, 40, 40], [250, 200, 170], [120, 30, 30]
             ],
-            bg: [236, 232, 240]
+            bg: [238, 225, 215], dark: false
         },
         {
-            name: 'Verdant',
+            name: 'Deep Blue',
             colors: [
-                [104, 144, 160], [120, 168, 136], [168, 200, 184],
-                [136, 176, 152], [80, 112, 104], [200, 216, 200]
+                [255, 255, 255], [180, 210, 240], [120, 160, 220],
+                [200, 220, 255], [90, 130, 200], [230, 240, 255]
             ],
-            bg: [232, 236, 228]
+            bg: [18, 36, 72], dark: true
         },
         {
-            name: 'Sumi',
+            name: 'Rain',
             colors: [
-                [42, 42, 42], [90, 90, 90], [138, 138, 138],
-                [176, 168, 152], [212, 204, 192], [232, 228, 220]
+                [255, 255, 255], [200, 220, 240], [160, 180, 220],
+                [230, 235, 250], [120, 140, 190], [240, 245, 255]
             ],
-            bg: [240, 238, 234]
+            bg: [12, 18, 35], dark: true
         },
         {
-            name: 'Ember',
+            name: 'Ice',
             colors: [
-                [192, 96, 64], [224, 136, 80], [240, 184, 120],
-                [168, 64, 48], [112, 40, 32], [248, 216, 168]
+                [255, 255, 255], [200, 230, 245], [170, 200, 235],
+                [220, 240, 255], [140, 180, 220], [240, 250, 255]
             ],
-            bg: [238, 230, 222]
+            bg: [25, 45, 75], dark: true
         }
     ];
 
@@ -664,9 +674,8 @@
         maxLife[i] = 200 + Math.random() * 400;
         life[i] = initial ? Math.random() * maxLife[i] : maxLife[i];
         alpha[i] = 0;
-        size[i] = 2 + Math.random() * 6;
+        size[i] = 1.5 + Math.random() * 4.5;
         hue[i] = (Math.random() * palette.colors.length) | 0;
-        // type distribution: 25% each
         type[i] = (Math.random() * TYPES) | 0;
     }
 
@@ -762,7 +771,7 @@
             // change color & type for fresh visual
             hue[idx] = (Math.random() * palette.colors.length) | 0;
             type[idx] = (Math.random() * TYPES) | 0;
-            size[idx] = 2 + Math.random() * 6;
+            size[idx] = 1.5 + Math.random() * 4.5;
         }
     }
 
@@ -808,7 +817,9 @@
         const cc = colorCache;
         const stepMax = ALPHA_STEPS - 1;
 
-        ctx.globalCompositeOperation = 'source-over';
+        // Dark palettes → ADD blend (luminous particles on dark bg)
+        // Light palettes → BLEND (source-over, natural layering)
+        ctx.globalCompositeOperation = palette.dark ? 'lighter' : 'source-over';
         ctx.lineCap = 'round';
 
         for (let i = 0; i < N; i++) {
@@ -938,11 +949,13 @@
     function applyPalette() {
         palette = PALETTES[palIdx];
         buildColorCache();
-        // update background of canvas container
-        document.getElementById('canvas-container').style.background =
-            `rgb(${palette.bg[0]},${palette.bg[1]},${palette.bg[2]})`;
+        const bgCss = `rgb(${palette.bg[0]},${palette.bg[1]},${palette.bg[2]})`;
+        document.getElementById('canvas-container').style.background = bgCss;
+        document.body.style.background = bgCss;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bgCss);
+        // Toggle dark-mode class so title text becomes light on dark palettes
+        document.body.classList.toggle('dark-pal', palette.dark);
         document.getElementById('tc-palette').textContent = palette.name;
-        // rebuild palette chips UI
         buildPaletteUI();
     }
 
