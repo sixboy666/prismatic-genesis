@@ -648,6 +648,47 @@
         });
     }
 
+    // Pre-render a soft radial-gradient sprite per palette color. Each
+    // particle becomes a glowing bokeh orb (xiaohongshu "vibecoding" vibe)
+    // rather than a hard line. Blitting these via drawImage is cheap and
+    // the ADD blend lets overlapping orbs bloom into dreamy halos.
+    let glowSprites = [];
+    function buildGlowSprites() {
+        glowSprites = paletteRGB.map(rgb => {
+            const S = 64;
+            const g = createGraphics(S, S);
+            const ctx = g.drawingContext;
+            const grad = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
+            grad.addColorStop(0.00, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},1)`);
+            grad.addColorStop(0.25, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0.45)`);
+            grad.addColorStop(0.60, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0.10)`);
+            grad.addColorStop(1.00, `rgba(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0},0)`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, S, S);
+            return g;
+        });
+    }
+
+    // Slow-drifting background bokeh lights for depth (the "soft light
+    // effects" in the reference image).
+    let bokehLights = [];
+    function buildBokehLights() {
+        bokehLights = [];
+        const n = 26;
+        for (let i = 0; i < n; i++) {
+            bokehLights.push({
+                x: random(width),
+                y: random(height),
+                r: random(40, 120),
+                vx: random(-0.25, 0.25),
+                vy: random(-0.20, 0.20),
+                colorIdx: floor(random(5)),
+                phase: random(TWO_PI),
+                pulseSpeed: random(0.005, 0.015)
+            });
+        }
+    }
+
     function buildSceneTabs() {
         const wrap = document.getElementById('scene-tabs');
         wrap.innerHTML = '';
@@ -708,6 +749,8 @@
         blendMode(BLEND);
         background(sc.bg[0], sc.bg[1], sc.bg[2]);
         buildPaletteCache();
+        buildGlowSprites();
+        buildBokehLights();
         for (let i = 0; i < params.particleCount; i++) {
             particles.push(new Particle());
         }
@@ -790,21 +833,42 @@
         if (frameCount % 2 === 0) computeField();
         t += 0.01;
 
-        // 2) Soft glow halo at pointer position (dreamy "xiaohongshu" vibe).
+        // 2) Background bokeh depth lights (slow drifting soft halos).
+        //    These sit behind the particles and give the underwater-dreamy
+        //    depth seen in the reference image.
+        blendMode(ADD);
+        for (let i = 0; i < bokehLights.length; i++) {
+            const b = bokehLights[i];
+            b.x += b.vx;
+            b.y += b.vy;
+            b.phase += b.pulseSpeed;
+            if (b.x < -b.r) b.x = width + b.r;
+            else if (b.x > width + b.r) b.x = -b.r;
+            if (b.y < -b.r) b.y = height + b.r;
+            else if (b.y > height + b.r) b.y = -b.r;
+            const sprite = glowSprites[b.colorIdx % glowSprites.length];
+            const pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(b.phase));
+            const size = b.r * 2;
+            drawingContext.globalAlpha = 0.10 * pulse;
+            drawingContext.drawImage(sprite.canvas, b.x - size/2, b.y - size/2, size, size);
+        }
+        drawingContext.globalAlpha = 1;
+
+        // 3) Soft glow halo at pointer position (dreamy "xiaohongshu" vibe).
         if (pointer.active && glowBoost > 0.01) {
-            blendMode(ADD);
             const pal = paletteRGB;
             const hc = pal[pal.length - 1] || [255, 240, 220];
             const haloR = Math.min(width, height) * (0.18 + glowBoost * 0.18);
-            noStroke();
-            for (let g = 3; g >= 1; g--) {
-                fill(hc[0], hc[1], hc[2], 14 * glowBoost / g);
-                ellipse(pointer.x, pointer.y, haloR * g * 0.7);
-            }
+            const sprite = glowSprites[glowSprites.length - 1];
+            const size = haloR * 2.4;
+            drawingContext.globalAlpha = 0.35 * glowBoost;
+            drawingContext.drawImage(sprite.canvas, pointer.x - size/2, pointer.y - size/2, size, size);
+            drawingContext.globalAlpha = 1;
             glowBoost *= 0.93; // decays after the touch ends
         }
 
-        // 3) Particles in ADD blend — overlaps brighten into bloom-like glow.
+        // 4) Particles: faint connecting line + soft bokeh glow head.
+        //    ADD blend makes overlaps bloom into the reference-image glow.
         blendMode(ADD);
         drawingContext.lineCap = 'round';
 
@@ -814,6 +878,7 @@
             p.update();
             p.display(pal);
         }
+        drawingContext.globalAlpha = 1;
 
         // Reset to default blend so the next frame's fade rect behaves.
         blendMode(BLEND);
@@ -885,19 +950,30 @@
             }
         }
         display(pal) {
-            // Single line segment per particle drawn in ADD blend mode so
-            // overlapping trails bloom into soft glow (xiaohongshu aesthetic).
+            // Dreamy bokeh rendering (xiaohongshu "vibecoding" aesthetic):
+            // 1) A faint connecting line keeps the trail continuous between
+            //    frames so fast-moving particles don't break into dots.
+            // 2) A soft radial-gradient sprite blit at the particle head
+            //    becomes the glowing bokeh orb; overlapping orbs in ADD blend
+            //    bloom into the soft halos seen in the reference image.
             const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
             const age = this.life / this.maxLife;
             let idx = this.colorIdx;
             if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
             const c = pal[idx % pal.length];
+            const sprite = glowSprites[idx % glowSprites.length];
 
-            // Boost alpha slightly when a touch is active for extra glow.
-            const alpha = (40 + age * 140) * (1 + glowBoost * 0.5);
-            stroke(c[0], c[1], c[2], Math.min(255, alpha));
-            strokeWeight(0.7 + Math.min(speed, 4) * 0.5);
+            // 1) Faint soft trail line.
+            const lineAlpha = (28 + age * 60) * (1 + glowBoost * 0.4);
+            stroke(c[0], c[1], c[2], Math.min(255, lineAlpha));
+            strokeWeight(0.8 + Math.min(speed, 4) * 0.35);
             line(this.px, this.py, this.x, this.y);
+
+            // 2) Bokeh glow head — size & brightness driven by speed & age.
+            const size = 9 + speed * 3.5 + age * 5;
+            drawingContext.globalAlpha = Math.min(1, (0.22 + age * 0.55) * (1 + glowBoost * 0.6));
+            drawingContext.drawImage(sprite.canvas, this.x - size/2, this.y - size/2, size, size);
+            drawingContext.globalAlpha = 1;
         }
     }
 
