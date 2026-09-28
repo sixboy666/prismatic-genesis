@@ -478,47 +478,58 @@
     // Every scene is a different algorithm + palette. One seed, many worlds.
     // ══════════════════════════════════════════════════════════════════════
 
-    // ----- Scene definitions: each scene = palette + algorithm + defaults -----
+    // ----- Scene definitions: each scene = palette + algorithm + RENDER STYLE + defaults -----
+    //   render modes give every scene a distinct visual language:
+    //     'bokeh'   – soft glowing orbs (dreamy nebula)
+    //     'web'     – constellation network of connecting lines
+    //     'ripple'  – expanding concentric rings (water droplets)
+    //     'facets'  – translucent rotating hexagons (crystalline)
+    //     'streaks' – long light streaks along flow (rain / aurora ribbons)
     const SCENES = [
         {
             key: 'nebula',
             name: 'Nebula Bloom',
             palette: ['#1a0a2e', '#4b0082', '#c724b1', '#ff5e9c', '#ffd166'],
             bg: [10, 5, 25],
-            defaults: { particleCount: 2200, flowSpeed: 0.7, noiseScale: 0.0035, trailLength: 12, fieldStrength: 1.3 },
-            field: 'curl'
+            defaults: { particleCount: 1600, flowSpeed: 0.7, noiseScale: 0.0035, trailLength: 12, fieldStrength: 1.3 },
+            field: 'curl',
+            render: 'bokeh'
         },
         {
             key: 'quantum',
-            name: 'Quantum Flow',
+            name: 'Quantum Web',
             palette: ['#03045e', '#0077b6', '#00b4d8', '#48cae4', '#caf0f8'],
             bg: [2, 8, 30],
-            defaults: { particleCount: 2000, flowSpeed: 1.0, noiseScale: 0.0050, trailLength: 8, fieldStrength: 1.6 },
-            field: 'flow'
+            defaults: { particleCount: 520, flowSpeed: 0.6, noiseScale: 0.0050, trailLength: 22, fieldStrength: 1.4 },
+            field: 'flow',
+            render: 'web'
         },
         {
             key: 'solar',
-            name: 'Solar Bloom',
+            name: 'Solar Ripples',
             palette: ['#3d0e00', '#a32cc4', '#ff7b00', '#ffb703', '#fff3b0'],
             bg: [25, 8, 0],
-            defaults: { particleCount: 2500, flowSpeed: 0.9, noiseScale: 0.0040, trailLength: 10, fieldStrength: 1.4 },
-            field: 'radial'
+            defaults: { particleCount: 280, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 20, fieldStrength: 0.8 },
+            field: 'radial',
+            render: 'ripple'
         },
         {
             key: 'crystal',
-            name: 'Crystal Lattice',
+            name: 'Crystal Facets',
             palette: ['#022b2c', '#0f7b63', '#1db954', '#a8e6cf', '#f7fff7'],
             bg: [2, 20, 18],
-            defaults: { particleCount: 1800, flowSpeed: 0.6, noiseScale: 0.0060, trailLength: 6, fieldStrength: 1.8 },
-            field: 'hex'
+            defaults: { particleCount: 650, flowSpeed: 0.5, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.6 },
+            field: 'hex',
+            render: 'facets'
         },
         {
             key: 'aurora',
-            name: 'Aurora Drift',
+            name: 'Aurora Streaks',
             palette: ['#0d1b2a', '#2d6a4f', '#95d5b2', '#c77dff', '#ffafcc'],
             bg: [4, 12, 28],
-            defaults: { particleCount: 2400, flowSpeed: 0.8, noiseScale: 0.0030, trailLength: 14, fieldStrength: 1.2 },
-            field: 'wave'
+            defaults: { particleCount: 850, flowSpeed: 1.1, noiseScale: 0.0030, trailLength: 14, fieldStrength: 1.3 },
+            field: 'wave',
+            render: 'streaks'
         }
     ];
 
@@ -564,7 +575,7 @@
         const loading = document.querySelector('.loading');
         if (loading) loading.style.display = 'none';
         buildSceneTabs();
-        applySceneDefaults(currentSceneIndex, false);
+        applySceneDefaults(currentSceneIndex, true);
         initializeSystem();
 
         // Mobile sidebar drawer behavior
@@ -867,16 +878,25 @@
             glowBoost *= 0.93; // decays after the touch ends
         }
 
-        // 4) Particles: faint connecting line + soft bokeh glow head.
-        //    ADD blend makes overlaps bloom into the reference-image glow.
+        // 4) Particles — dispatch per scene's render style.
+        //    For 'web' we update ALL particles first, then draw the
+        //    constellation lines, then draw node dots. Other modes update
+        //    + draw each particle inline.
         blendMode(ADD);
         drawingContext.lineCap = 'round';
 
         const pal = paletteRGB;
-        for (let i = 0, n = particles.length; i < n; i++) {
-            const p = particles[i];
-            p.update();
-            p.display(pal);
+        const render = SCENES[currentSceneIndex].render;
+        if (render === 'web') {
+            for (let i = 0, n = particles.length; i < n; i++) particles[i].update();
+            drawWebConnections(pal);
+            for (let i = 0, n = particles.length; i < n; i++) particles[i].display(pal);
+        } else {
+            for (let i = 0, n = particles.length; i < n; i++) {
+                const p = particles[i];
+                p.update();
+                p.display(pal);
+            }
         }
         drawingContext.globalAlpha = 1;
 
@@ -885,7 +905,50 @@
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // PARTICLE
+    // WEB MODE — spatial-hash connecting lines between nearby particles.
+    // Drawn once per frame AFTER all particles are updated.
+    // ══════════════════════════════════════════════════════════════════════
+    function drawWebConnections(pal) {
+        const cellSize = 55;
+        const maxD = 55, maxD2 = maxD * maxD;
+        const map = new Map();
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const key = (Math.floor(p.x / cellSize)) * 100000 + Math.floor(p.y / cellSize);
+            let cell = map.get(key);
+            if (!cell) { cell = []; map.set(key, cell); }
+            cell.push(i);
+        }
+        strokeWeight(0.55);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const cx = Math.floor(p.x / cellSize);
+            const cy = Math.floor(p.y / cellSize);
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const cell = map.get((cx + dx) * 100000 + (cy + dy));
+                    if (!cell) continue;
+                    for (let m = 0; m < cell.length; m++) {
+                        const j = cell[m];
+                        if (j <= i) continue; // each pair once
+                        const q = particles[j];
+                        const ddx = p.x - q.x, ddy = p.y - q.y;
+                        const d2 = ddx * ddx + ddy * ddy;
+                        if (d2 > maxD2) continue;
+                        const t = 1 - d2 / maxD2;            // closeness 0..1
+                        const c = pal[((p.colorIdx + q.colorIdx) >> 1) % pal.length];
+                        stroke(c[0], c[1], c[2], t * 110);
+                        line(p.x, p.y, q.x, q.y);
+                    }
+                }
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // PARTICLE — dispatches rendering on SCENES[i].render so every scene
+    // has its own distinct visual language (bokeh / web / ripple / facets /
+    // streaks) instead of a single uniform particle style.
     // ══════════════════════════════════════════════════════════════════════
     class Particle {
         constructor() {
@@ -894,30 +957,52 @@
         }
         reset() {
             const sc = SCENES[currentSceneIndex];
-            if (sc.field === 'radial' || sc.field === 'curl') {
-                // spawn near center for bloom feel
-                const r = random(0, width * 0.18);
-                const a = random(TWO_PI);
-                this.x = width / 2 + Math.cos(a) * r;
-                this.y = height / 2 + Math.sin(a) * r;
-            } else if (sc.field === 'wave') {
-                this.x = random(width);
-                this.y = random(height * 0.4, height);
-            } else {
+            if (sc.render === 'ripple') {
+                // Ripples emit from a fixed spawn point and expand outward;
+                // the particle barely drifts so rings stay clean circles.
                 this.x = random(width);
                 this.y = random(height);
+                this.spawnX = this.x;
+                this.spawnY = this.y;
+                this.maxLife = random(90, 170);
+            } else {
+                if (sc.field === 'radial' || sc.field === 'curl') {
+                    const r = random(0, width * 0.18);
+                    const a = random(TWO_PI);
+                    this.x = width / 2 + Math.cos(a) * r;
+                    this.y = height / 2 + Math.sin(a) * r;
+                } else if (sc.field === 'wave') {
+                    this.x = random(width);
+                    this.y = random(height * 0.4, height);
+                } else {
+                    this.x = random(width);
+                    this.y = random(height);
+                }
+                this.maxLife = random(60, 220);
             }
             this.px = this.x;
             this.py = this.y;
             this.vx = 0;
             this.vy = 0;
-            this.maxLife = random(60, 220);
             this.life = this.maxLife;
             this.colorIdx = floor(random(5));
         }
         update() {
             this.px = this.x;
             this.py = this.y;
+            const sc = SCENES[currentSceneIndex];
+
+            if (sc.render === 'ripple') {
+                // Very gentle drift; the ring expands from spawnX/spawnY.
+                this.vx *= 0.95;
+                this.vy *= 0.95;
+                this.x += this.vx * params.flowSpeed * 0.25;
+                this.y += this.vy * params.flowSpeed * 0.25;
+                this.life--;
+                if (this.life <= 0) this.reset();
+                return;
+            }
+
             const f = lookupField(this.x, this.y);
             this.vx += f.x * params.fieldStrength * 0.15;
             this.vy += f.y * params.fieldStrength * 0.15;
@@ -950,30 +1035,89 @@
             }
         }
         display(pal) {
-            // Dreamy bokeh rendering (xiaohongshu "vibecoding" aesthetic):
-            // 1) A faint connecting line keeps the trail continuous between
-            //    frames so fast-moving particles don't break into dots.
-            // 2) A soft radial-gradient sprite blit at the particle head
-            //    becomes the glowing bokeh orb; overlapping orbs in ADD blend
-            //    bloom into the soft halos seen in the reference image.
+            const render = SCENES[currentSceneIndex].render;
             const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-            const age = this.life / this.maxLife;
+            const age = this.life / this.maxLife;          // 1 → 0
             let idx = this.colorIdx;
             if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
             const c = pal[idx % pal.length];
             const sprite = glowSprites[idx % glowSprites.length];
 
-            // 1) Faint soft trail line.
-            const lineAlpha = (28 + age * 60) * (1 + glowBoost * 0.4);
-            stroke(c[0], c[1], c[2], Math.min(255, lineAlpha));
-            strokeWeight(0.8 + Math.min(speed, 4) * 0.35);
-            line(this.px, this.py, this.x, this.y);
-
-            // 2) Bokeh glow head — size & brightness driven by speed & age.
-            const size = 9 + speed * 3.5 + age * 5;
-            drawingContext.globalAlpha = Math.min(1, (0.22 + age * 0.55) * (1 + glowBoost * 0.6));
-            drawingContext.drawImage(sprite.canvas, this.x - size/2, this.y - size/2, size, size);
-            drawingContext.globalAlpha = 1;
+            switch (render) {
+                case 'web': {
+                    // Constellation node — the connecting lines are drawn
+                    // separately by drawWebConnections().
+                    drawingContext.globalAlpha = 0.45 + age * 0.45;
+                    const ns = 10;
+                    drawingContext.drawImage(sprite.canvas, this.x - ns/2, this.y - ns/2, ns, ns);
+                    drawingContext.globalAlpha = 1;
+                    break;
+                }
+                case 'ripple': {
+                    // Expanding ring from the spawn point (water-droplet vibe).
+                    const progress = 1 - age;                    // 0 → 1
+                    const ringR = progress * Math.min(width, height) * 0.22;
+                    const fade = (1 - progress) * (1 - progress * 0.4);
+                    noFill();
+                    stroke(c[0], c[1], c[2], 200 * fade);
+                    strokeWeight(1.4 + (1 - progress) * 1.6);
+                    ellipse(this.spawnX, this.spawnY, ringR * 2);
+                    // soft inner glow orb
+                    drawingContext.globalAlpha = 0.18 * fade;
+                    drawingContext.drawImage(sprite.canvas, this.spawnX - ringR, this.spawnY - ringR, ringR * 2, ringR * 2);
+                    drawingContext.globalAlpha = 1;
+                    break;
+                }
+                case 'facets': {
+                    // Translucent rotating hexagon — crystalline tiling.
+                    const ang = Math.atan2(this.vy, this.vx);
+                    const fsize = 6 + speed * 2.5 + age * 3;
+                    const ca = Math.cos(ang), sa = Math.sin(ang);
+                    noStroke();
+                    fill(c[0], c[1], c[2], 30 + age * 35);
+                    beginShape();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k / 6 * TWO_PI;
+                        const lx = Math.cos(a) * fsize, ly = Math.sin(a) * fsize;
+                        vertex(this.x + lx * ca - ly * sa, this.y + lx * sa + ly * ca);
+                    }
+                    endShape(CLOSE);
+                    // bright core
+                    drawingContext.globalAlpha = 0.45 + age * 0.3;
+                    drawingContext.drawImage(sprite.canvas, this.x - 5, this.y - 5, 10, 10);
+                    drawingContext.globalAlpha = 1;
+                    break;
+                }
+                case 'streaks': {
+                    // Long light streak along the velocity direction.
+                    const len = speed + 0.001;
+                    const ux = this.vx / len, uy = this.vy / len;
+                    const stretch = 14 + speed * 9;
+                    const sAlpha = (50 + age * 150) * (1 + glowBoost * 0.4);
+                    stroke(c[0], c[1], c[2], Math.min(255, sAlpha));
+                    strokeWeight(1.0 + speed * 0.25);
+                    line(this.x - ux * stretch, this.y - uy * stretch,
+                         this.x + ux * stretch * 0.25, this.y + uy * stretch * 0.25);
+                    // bright head
+                    drawingContext.globalAlpha = 0.3 + age * 0.5;
+                    drawingContext.drawImage(sprite.canvas, this.x - 7, this.y - 7, 14, 14);
+                    drawingContext.globalAlpha = 1;
+                    break;
+                }
+                case 'bokeh':
+                default: {
+                    // Dreamy bokeh orb + faint trail line.
+                    const lineAlpha = (28 + age * 60) * (1 + glowBoost * 0.4);
+                    stroke(c[0], c[1], c[2], Math.min(255, lineAlpha));
+                    strokeWeight(0.8 + Math.min(speed, 4) * 0.35);
+                    line(this.px, this.py, this.x, this.y);
+                    const size = 9 + speed * 3.5 + age * 5;
+                    drawingContext.globalAlpha = Math.min(1, (0.22 + age * 0.55) * (1 + glowBoost * 0.6));
+                    drawingContext.drawImage(sprite.canvas, this.x - size/2, this.y - size/2, size, size);
+                    drawingContext.globalAlpha = 1;
+                    break;
+                }
+            }
         }
     }
 
