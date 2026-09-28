@@ -488,46 +488,51 @@
     const SCENES = [
         {
             key: 'nebula',
-            name: 'Nebula Bloom',
-            palette: ['#1a0a2e', '#4b0082', '#c724b1', '#ff5e9c', '#ffd166'],
-            bg: [10, 5, 25],
-            defaults: { particleCount: 1600, flowSpeed: 0.7, noiseScale: 0.0035, trailLength: 12, fieldStrength: 1.3 },
-            field: 'curl',
-            render: 'bokeh'
+            name: 'Scatter Drift',
+            palette: ['#1a3a6a', '#4a7ab5', '#9ab8d5', '#d07090', '#f0a8c0'],
+            bg: [206, 226, 242],
+            blend: 'BLEND',
+            defaults: { particleCount: 1700, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 8, fieldStrength: 0.8 },
+            field: 'flow',
+            render: 'scatter'
         },
         {
             key: 'quantum',
             name: 'Quantum Web',
-            palette: ['#03045e', '#0077b6', '#00b4d8', '#48cae4', '#caf0f8'],
-            bg: [2, 8, 30],
-            defaults: { particleCount: 520, flowSpeed: 0.6, noiseScale: 0.0050, trailLength: 22, fieldStrength: 1.4 },
+            palette: ['#3a1402', '#7a2c0a', '#a64418', '#d97757', '#f5b8a0'],
+            bg: [240, 226, 206],
+            blend: 'BLEND',
+            defaults: { particleCount: 560, flowSpeed: 0.5, noiseScale: 0.0050, trailLength: 18, fieldStrength: 1.2 },
             field: 'flow',
             render: 'web'
         },
         {
             key: 'solar',
-            name: 'Solar Ripples',
-            palette: ['#3d0e00', '#a32cc4', '#ff7b00', '#ffb703', '#fff3b0'],
-            bg: [25, 8, 0],
-            defaults: { particleCount: 280, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 20, fieldStrength: 0.8 },
+            name: 'Concentric Ripples',
+            palette: ['#0a3d2e', '#1c7050', '#3aa878', '#7fd8b0', '#e8f8ec'],
+            bg: [176, 224, 206],
+            blend: 'BLEND',
+            defaults: { particleCount: 300, flowSpeed: 0.3, noiseScale: 0.0040, trailLength: 14, fieldStrength: 0.6 },
             field: 'radial',
             render: 'ripple'
         },
         {
             key: 'crystal',
             name: 'Crystal Facets',
-            palette: ['#022b2c', '#0f7b63', '#1db954', '#a8e6cf', '#f7fff7'],
-            bg: [2, 20, 18],
-            defaults: { particleCount: 650, flowSpeed: 0.5, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.6 },
+            palette: ['#0a1c3a', '#2a4a7a', '#5a8bb8', '#a0c4e8', '#e0ecf8'],
+            bg: [216, 230, 242],
+            blend: 'BLEND',
+            defaults: { particleCount: 640, flowSpeed: 0.4, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.4 },
             field: 'hex',
             render: 'facets'
         },
         {
             key: 'aurora',
-            name: 'Aurora Streaks',
-            palette: ['#0d1b2a', '#2d6a4f', '#95d5b2', '#c77dff', '#ffafcc'],
-            bg: [4, 12, 28],
-            defaults: { particleCount: 850, flowSpeed: 1.1, noiseScale: 0.0030, trailLength: 14, fieldStrength: 1.3 },
+            name: 'Diagonal Rain',
+            palette: ['#0d1b2a', '#4a6b8a', '#9ab8d5', '#d5e8f5', '#ffffff'],
+            bg: [10, 18, 32],
+            blend: 'ADD',
+            defaults: { particleCount: 820, flowSpeed: 1.0, noiseScale: 0.0030, trailLength: 12, fieldStrength: 1.0 },
             field: 'wave',
             render: 'streaks'
         }
@@ -847,7 +852,8 @@
 
         // 2) Subtle background depth dots — crisp small points, NOT big
         //    blurry halos. Adds depth without smearing the frame.
-        blendMode(ADD);
+        const particleBlend = sc.blend === 'ADD' ? ADD : BLEND;
+        blendMode(particleBlend);
         const pal0 = paletteRGB;
         noStroke();
         for (let i = 0; i < bokehLights.length; i++) {
@@ -864,11 +870,14 @@
         }
 
         // 3) Pointer attractor indicator — crisp small ring, not a blur.
+        //    Pick a contrasting color: darkest on light bg, lightest on dark.
         if (pointer.active && glowBoost > 0.01) {
-            const hc = pal0[pal0.length - 1] || [255, 240, 220];
+            const hc = sc.blend === 'ADD'
+                ? (pal0[pal0.length - 1] || [255, 240, 220])
+                : (pal0[0] || [20, 20, 20]);
             noFill();
-            stroke(hc[0], hc[1], hc[2], 130 * glowBoost);
-            strokeWeight(1.2);
+            stroke(hc[0], hc[1], hc[2], 160 * glowBoost);
+            strokeWeight(1.4);
             const rr = Math.min(width, height) * 0.045 * (1 + glowBoost * 0.5);
             ellipse(pointer.x, pointer.y, rr * 2);
             glowBoost *= 0.90;
@@ -878,7 +887,7 @@
         //    For 'web' we update ALL particles first, then draw the
         //    constellation lines, then draw node dots. Other modes update
         //    + draw each particle inline.
-        blendMode(ADD);
+        blendMode(particleBlend);
         drawingContext.lineCap = 'round';
 
         const pal = paletteRGB;
@@ -982,6 +991,7 @@
             this.vy = 0;
             this.life = this.maxLife;
             this.colorIdx = floor(random(5));
+            this.angle = random(TWO_PI);
         }
         update() {
             this.px = this.x;
@@ -1002,6 +1012,13 @@
             const f = lookupField(this.x, this.y);
             this.vx += f.x * params.fieldStrength * 0.15;
             this.vy += f.y * params.fieldStrength * 0.15;
+
+            // Streaks scene: force a diagonal rain-like bias so all
+            // streaks fall at ~45°, matching the reference image cell.
+            if (sc.render === 'streaks') {
+                this.vx += 0.10;
+                this.vy += 0.18;
+            }
 
             // Touch / pointer attractor: pull nearby particles gently toward
             // the pointer so the user can "stir" the bloom on mobile.
@@ -1050,14 +1067,21 @@
                     break;
                 }
                 case 'ripple': {
-                    // Sharp expanding ring outline, no inner blur.
+                    // Multiple clean concentric rings expanding from spawn
+                    // point — mirrors the top-left reference cell (clean
+                    // nested green circles on cyan).
                     const progress = 1 - age;                    // 0 → 1
-                    const ringR = progress * Math.min(width, height) * 0.22;
+                    const baseR = progress * Math.min(width, height) * 0.22;
                     const fade = (1 - progress) * (1 - progress * 0.4);
                     noFill();
-                    stroke(c[0], c[1], c[2], 230 * fade);
-                    strokeWeight(1.3);
-                    ellipse(this.spawnX, this.spawnY, ringR * 2);
+                    strokeWeight(1.2);
+                    for (let k = 0; k < 3; k++) {
+                        const r = baseR - k * 7;
+                        if (r > 1) {
+                            stroke(c[0], c[1], c[2], 230 * fade * (1 - k * 0.28));
+                            ellipse(this.spawnX, this.spawnY, r * 2);
+                        }
+                    }
                     // tiny bright center dot
                     noStroke();
                     fill(c[0], c[1], c[2], 200 * fade);
@@ -1092,13 +1116,30 @@
                     break;
                 }
                 case 'streaks': {
-                    // Thin sharp light streak along velocity, no head glow.
-                    const len = speed + 0.001;
-                    const ux = this.vx / len, uy = this.vy / len;
-                    const stretch = 10 + speed * 7;
-                    stroke(c[0], c[1], c[2], Math.min(255, 70 + age * 160));
-                    strokeWeight(0.9 + speed * 0.2);
+                    // Diagonal rain streak — fixed ~50° angle so all
+                    // streaks fall in parallel, matching the middle-right
+                    // reference cell. Length scales with speed.
+                    const angle = Math.PI * 0.28;
+                    const ux = Math.cos(angle), uy = Math.sin(angle);
+                    const stretch = 8 + speed * 6;
+                    stroke(c[0], c[1], c[2], Math.min(255, 80 + age * 150));
+                    strokeWeight(0.8 + speed * 0.15);
                     line(this.x - ux * stretch, this.y - uy * stretch, this.x, this.y);
+                    break;
+                }
+                case 'scatter': {
+                    // Small rotated rectangle — distinct crisp shape, not a
+                    // blob. Mirrors the bottom-right reference cell (scattered
+                    // white/pink small rects on light blue, atmospheric).
+                    push();
+                    translate(this.x, this.y);
+                    rotate(this.angle);
+                    noStroke();
+                    fill(c[0], c[1], c[2], Math.min(255, 110 + age * 120));
+                    const w = 3 + Math.min(speed, 3) * 0.8;
+                    const h = 1.6 + Math.min(speed, 3) * 0.4;
+                    rect(-w / 2, -h / 2, w, h);
+                    pop();
                     break;
                 }
                 case 'bokeh':
