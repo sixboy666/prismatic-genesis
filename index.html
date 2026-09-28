@@ -469,8 +469,8 @@
                 </div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Trail Fade</span><span class="value" id="v-trail">0.28</span></div>
-                    <input type="range" id="s-trail" min="0.10" max="0.60" step="0.02" value="0.28">
+                    <div class="label-row"><span class="label">Trail Fade</span><span class="value" id="v-trail">0.45</span></div>
+                    <input type="range" id="s-trail" min="0.10" max="0.80" step="0.02" value="0.45">
                 </div>
             </div>
 
@@ -545,7 +545,7 @@
     let flowSpeed = 0.6;
     let noiseScale = 0.0030;
     let densityPull = 0.8;
-    let trailFade = 0.28;
+    let trailFade = 0.45;
     let paused = false;
 
     // ── Particle data (typed arrays for performance) ──
@@ -648,7 +648,7 @@
         maxLife[i] = 200 + Math.random() * 400;
         life[i] = initial ? Math.random() * maxLife[i] : maxLife[i];
         alpha[i] = 0;
-        size[i] = 2 + Math.random() * 7;
+        size[i] = 2.5 + Math.random() * 7.5;
         hue[i] = (Math.random() * palette.colors.length) | 0;
         type[i] = (Math.random() * TYPES) | 0;
     }
@@ -745,7 +745,7 @@
             // change color & type for fresh visual
             hue[idx] = (Math.random() * palette.colors.length) | 0;
             type[idx] = (Math.random() * TYPES) | 0;
-            size[idx] = 2 + Math.random() * 7;
+            size[idx] = 2.5 + Math.random() * 7.5;
         }
     }
 
@@ -803,8 +803,14 @@
 
             let fx = 0, fy = 0;
             if (gi >= 0) {
-                fx = fieldX[gi] * speed * 0.35;
-                fy = fieldY[gi] * speed * 0.35;
+                // Gentle flow field force — reduced to avoid coherent streaks
+                fx = fieldX[gi] * speed * 0.22;
+                fy = fieldY[gi] * speed * 0.22;
+
+                // Random jitter breaks up coherent flow-field alignment
+                // (prevents traditional flow-field line/streak appearance)
+                fx += (Math.random() - 0.5) * 0.15;
+                fy += (Math.random() - 0.5) * 0.15;
 
                 // Density diffusion: overcrowded cells push particles apart (whitespace),
                 // sparse cells let flow gather them naturally (gathering).
@@ -822,8 +828,8 @@
                 }
             }
 
-            vx[i] = vx[i] * 0.95 + fx;
-            vy[i] = vy[i] * 0.95 + fy;
+            vx[i] = vx[i] * 0.90 + fx;
+            vy[i] = vy[i] * 0.90 + fy;
 
             const vmag = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]);
             if (vmag > vmax) {
@@ -1032,7 +1038,7 @@
             applySeed();
         };
 
-        // Sliders
+        // Sliders — all take effect immediately
         const bind = (sid, vid, fmt, onChange) => {
             const s = document.getElementById(sid);
             const v = document.getElementById(vid);
@@ -1042,7 +1048,13 @@
                 onChange(val);
             });
         };
-        bind('s-count', 'v-count', v => v.toFixed(0), v => { pCount = v|0; });
+        // Particle count: debounced reinit so dragging doesn't lag
+        let countTimer = null;
+        bind('s-count', 'v-count', v => v.toFixed(0), v => {
+            pCount = v|0;
+            clearTimeout(countTimer);
+            countTimer = setTimeout(() => initParticles(pCount), 200);
+        });
         bind('s-speed', 'v-speed', v => v.toFixed(1), v => { flowSpeed = v; });
         bind('s-noise', 'v-noise', v => v.toFixed(4), v => { noiseScale = v; });
         bind('s-density', 'v-density', v => v.toFixed(1), v => { densityPull = v; });
