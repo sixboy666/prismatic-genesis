@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prismatic Genesis - Generative Art Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #141413;
+            --paper: #faf9f5;
+            --mid: #b0aea5;
+            --line: #e8e6dc;
+            --orange: #d97757;
+            --blue: #6a9bcc;
+            --green: #788c5d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--paper) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--ink);
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 340px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: calc(100vh - 40px);
+        }
+
+        .sidebar h1 {
+            font-family: 'Lora', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar .subtitle {
+            color: var(--mid);
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .control-section { margin-bottom: 28px; }
+
+        .control-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .control-section h3::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--orange);
+            border-radius: 50%;
+        }
+
+        /* Scene Tabs */
+        .scene-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .scene-tab {
+            padding: 10px 8px;
+            border: 1.5px solid var(--line);
+            border-radius: 8px;
+            background: var(--paper);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            color: var(--ink);
+        }
+
+        .scene-tab .swatch {
+            display: block;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 6px;
+        }
+
+        .scene-tab:hover { border-color: var(--orange); transform: translateY(-1px); }
+        .scene-tab.active {
+            border-color: var(--orange);
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.15);
+        }
+
+        .seed-input {
+            width: 100%;
+            background: var(--paper);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--line);
+            text-align: center;
+            color: var(--ink);
+        }
+
+        .seed-input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
+            background: white;
+        }
+
+        .seed-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .control-group { margin-bottom: 18px; }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .control-group label .value-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--mid);
+            font-weight: 400;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: var(--line);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--orange);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px;
+            background: var(--orange); border-radius: 50%;
+            border: none; cursor: pointer;
+        }
+
+        .button {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-family: inherit;
+        }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button:active { transform: translateY(0); }
+        .button.secondary { background: var(--blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--green); }
+        .button.tertiary:hover { background: #6b7b52; }
+
+        .button-row { display: flex; gap: 8px; }
+        .button-row .button { flex: 1; }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: 0;
+            gap: 12px;
+        }
+
+        #canvas-container {
+            width: 100%;
+            max-width: 900px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(20, 20, 19, 0.18);
+            background: #000;
+            position: relative;
+        }
+
+        #canvas-container canvas {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .scene-label {
+            font-family: 'Lora', serif;
+            font-size: 14px;
+            color: var(--mid);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .scene-label b { color: var(--ink); font-weight: 600; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--mid);
+            padding: 40px;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: var(--mid);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 760px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Prismatic Genesis</h1>
+            <div class="subtitle">A generative art game. Each scene is a different physics. One seed, infinite worlds.</div>
+
+            <!-- Scene Selector -->
+            <div class="control-section">
+                <h3>Scene</h3>
+                <div class="scene-tabs" id="scene-tabs"></div>
+            </div>
+
+            <!-- Seed -->
+            <div class="control-section">
+                <h3>Seed</h3>
+                <input type="number" id="seed-input" class="seed-input" value="12345" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">&#8592; Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next &#8594;</button>
+                </div>
+                <button class="button tertiary" onclick="randomSeedAndUpdate()">&#8635; Random Seed</button>
+            </div>
+
+            <!-- Parameters -->
+            <div class="control-section">
+                <h3>Parameters</h3>
+
+                <div class="control-group">
+                    <label>Particle Count <span class="value-display" id="particleCount-value">3500</span></label>
+                    <input type="range" id="particleCount" min="500" max="9000" step="250" value="3500" oninput="updateParam('particleCount', this.value)">
+                </div>
+
+                <div class="control-group">
+                    <label>Flow Speed <span class="value-display" id="flowSpeed-value">0.8</span></label>
+                    <input type="range" id="flowSpeed" min="0.1" max="3.0" step="0.1" value="0.8" oninput="updateParam('flowSpeed', this.value)">
+                </div>
+
+                <div class="control-group">
+                    <label>Noise Scale <span class="value-display" id="noiseScale-value">0.0040</span></label>
+                    <input type="range" id="noiseScale" min="0.0005" max="0.0200" step="0.0005" value="0.0040" oninput="updateParam('noiseScale', this.value)">
+                </div>
+
+                <div class="control-group">
+                    <label>Trail Length <span class="value-display" id="trailLength-value">10</span></label>
+                    <input type="range" id="trailLength" min="1" max="40" step="1" value="10" oninput="updateParam('trailLength', this.value)">
+                </div>
+
+                <div class="control-group">
+                    <label>Field Strength <span class="value-display" id="fieldStrength-value">1.2</span></label>
+                    <input type="range" id="fieldStrength" min="0.2" max="4.0" step="0.1" value="1.2" oninput="updateParam('fieldStrength', this.value)">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="button-row" style="margin-bottom:8px;">
+                    <button class="button" onclick="regenerate()">&#8635; Regenerate</button>
+                    <button class="button secondary" onclick="resetParameters()">Reset</button>
+                </div>
+                <button class="button tertiary" onclick="downloadPNG()">&#8627; Download PNG</button>
+                <p class="hint">Tip: switch scenes to explore a new physics. Each scene carries its own palette and field equations.</p>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">Initializing generative art...</div>
+            </div>
+            <div class="scene-label">Scene <b id="scene-name">Nebula Bloom</b> &middot; seed <b id="scene-seed">12345</b></div>
+        </div>
+    </div>
+
+    <script>
+    // ══════════════════════════════════════════════════════════════════════
+    // PRISMATIC GENESIS - A multi-scene generative art game
+    // Every scene is a different algorithm + palette. One seed, many worlds.
+    // ══════════════════════════════════════════════════════════════════════
+
+    // ----- Scene definitions: each scene = palette + algorithm + defaults -----
+    const SCENES = [
+        {
+            key: 'nebula',
+            name: 'Nebula Bloom',
+            palette: ['#1a0a2e', '#4b0082', '#c724b1', '#ff5e9c', '#ffd166'],
+            bg: [10, 5, 25],
+            defaults: { particleCount: 4000, flowSpeed: 0.7, noiseScale: 0.0035, trailLength: 14, fieldStrength: 1.3 },
+            field: 'curl'
+        },
+        {
+            key: 'quantum',
+            name: 'Quantum Flow',
+            palette: ['#03045e', '#0077b6', '#00b4d8', '#48cae4', '#caf0f8'],
+            bg: [2, 8, 30],
+            defaults: { particleCount: 3500, flowSpeed: 1.0, noiseScale: 0.0050, trailLength: 8, fieldStrength: 1.6 },
+            field: 'flow'
+        },
+        {
+            key: 'solar',
+            name: 'Solar Bloom',
+            palette: ['#3d0e00', '#a32cc4', '#ff7b00', '#ffb703', '#fff3b0'],
+            bg: [25, 8, 0],
+            defaults: { particleCount: 4500, flowSpeed: 0.9, noiseScale: 0.0040, trailLength: 12, fieldStrength: 1.4 },
+            field: 'radial'
+        },
+        {
+            key: 'crystal',
+            name: 'Crystal Lattice',
+            palette: ['#022b2c', '#0f7b63', '#1db954', '#a8e6cf', '#f7fff7'],
+            bg: [2, 20, 18],
+            defaults: { particleCount: 3000, flowSpeed: 0.6, noiseScale: 0.0060, trailLength: 6, fieldStrength: 1.8 },
+            field: 'hex'
+        },
+        {
+            key: 'aurora',
+            name: 'Aurora Drift',
+            palette: ['#0d1b2a', '#2d6a4f', '#95d5b2', '#c77dff', '#ffafcc'],
+            bg: [4, 12, 28],
+            defaults: { particleCount: 4200, flowSpeed: 0.8, noiseScale: 0.0030, trailLength: 18, fieldStrength: 1.2 },
+            field: 'wave'
+        }
+    ];
+
+    let currentSceneIndex = 0;
+
+    // ----- Global parameters (re-seeded per scene defaults) -----
+    let params = {
+        seed: 12345,
+        particleCount: 4000,
+        flowSpeed: 0.8,
+        noiseScale: 0.0035,
+        trailLength: 14,
+        fieldStrength: 1.3
+    };
+
+    // ----- p5 state -----
+    let particles = [];
+    let cols, rows;
+    let scl = 12;
+    let field = [];
+    let zoff = 0;
+    let t = 0;
+
+    // ══════════════════════════════════════════════════════════════════════
+    // SETUP
+    // ══════════════════════════════════════════════════════════════════════
+    function setup() {
+        const cnv = createCanvas(900, 900);
+        cnv.parent('canvas-container');
+        const loading = document.querySelector('.loading');
+        if (loading) loading.style.display = 'none';
+        buildSceneTabs();
+        applySceneDefaults(currentSceneIndex, false);
+        initializeSystem();
+    }
+
+    function buildSceneTabs() {
+        const wrap = document.getElementById('scene-tabs');
+        wrap.innerHTML = '';
+        SCENES.forEach((s, i) => {
+            const tab = document.createElement('div');
+            tab.className = 'scene-tab' + (i === currentSceneIndex ? ' active' : '');
+            tab.dataset.idx = i;
+            const grad = 'linear-gradient(90deg,' + s.palette.map(c => c).join(',') + ')';
+            tab.innerHTML = '<span class="swatch" style="background:' + grad + '"></span>' + s.name;
+            tab.onclick = () => selectScene(i);
+            wrap.appendChild(tab);
+        });
+    }
+
+    function selectScene(i) {
+        currentSceneIndex = i;
+        document.querySelectorAll('.scene-tab').forEach((el, idx) => {
+            el.classList.toggle('active', idx === i);
+        });
+        applySceneDefaults(i, true);
+        initializeSystem();
+        document.getElementById('scene-name').textContent = SCENES[i].name;
+    }
+
+    function applySceneDefaults(i, syncUI) {
+        const d = SCENES[i].defaults;
+        params.particleCount = d.particleCount;
+        params.flowSpeed = d.flowSpeed;
+        params.noiseScale = d.noiseScale;
+        params.trailLength = d.trailLength;
+        params.fieldStrength = d.fieldStrength;
+        if (syncUI) {
+            setSlider('particleCount', d.particleCount);
+            setSlider('flowSpeed', d.flowSpeed);
+            setSlider('noiseScale', d.noiseScale, 4);
+            setSlider('trailLength', d.trailLength);
+            setSlider('fieldStrength', d.fieldStrength);
+        }
+    }
+
+    function setSlider(id, val, decimals) {
+        const el = document.getElementById(id);
+        const disp = document.getElementById(id + '-value');
+        if (el) el.value = val;
+        if (disp) disp.textContent = (decimals != null) ? Number(val).toFixed(decimals) : val;
+    }
+
+    function initializeSystem() {
+        randomSeed(params.seed);
+        noiseSeed(params.seed);
+        particles = [];
+        cols = Math.floor(width / scl);
+        rows = Math.floor(height / scl);
+        field = new Array(cols * rows);
+        const sc = SCENES[currentSceneIndex];
+        background(sc.bg[0], sc.bg[1], sc.bg[2]);
+        for (let i = 0; i < params.particleCount; i++) {
+            particles.push(new Particle());
+        }
+        document.getElementById('scene-seed').textContent = params.seed;
+        document.getElementById('scene-name').textContent = sc.name;
+    }
+
+    function regenerate() {
+        initializeSystem();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // FIELD COMPUTATION per scene
+    // ══════════════════════════════════════════════════════════════════════
+    function computeField() {
+        const sc = SCENES[currentSceneIndex];
+        const mode = sc.field;
+        const ns = params.noiseScale;
+        zoff += 0.001;
+        const cx = width / 2, cy = height / 2;
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                let ang;
+                const px = x * scl, py = y * scl;
+
+                if (mode === 'flow') {
+                    ang = noise(x * ns, y * ns, zoff) * TWO_PI * 2;
+                } else if (mode === 'curl') {
+                    // curl-style: two noise layers combined -> turbulent
+                    const n1 = noise(x * ns, y * ns, zoff);
+                    const n2 = noise((x + 10) * ns, (y + 10) * ns, zoff);
+                    ang = (n1 + n2) * TWO_PI * 2;
+                } else if (mode === 'radial') {
+                    // solar bloom: tangential + radial outflow
+                    const dx = px - cx, dy = py - cy;
+                    const r = Math.sqrt(dx * dx + dy * dy) + 0.001;
+                    const baseAng = Math.atan2(dy, dx);
+                    const swirl = noise(x * ns, y * ns, zoff) * 1.2;
+                    ang = baseAng + Math.PI / 2 + swirl;
+                } else if (mode === 'hex') {
+                    // hex/crystal: angular field locked to 6-fold symmetry
+                    const n = noise(x * ns, y * ns, zoff);
+                    ang = Math.floor(n * 6) / 6 * TWO_PI;
+                } else if (mode === 'wave') {
+                    // aurora: layered sine waves drifting in x
+                    const wave = Math.sin(px * ns * 4 + zoff * 30) * 0.5 + 0.5;
+                    ang = (-Math.PI / 2) + (noise(x * ns, y * ns, zoff) - 0.5) * Math.PI + wave * Math.PI;
+                } else {
+                    ang = noise(x * ns, y * ns, zoff) * TWO_PI;
+                }
+                const idx = x + y * cols;
+                field[idx] = { x: Math.cos(ang), y: Math.sin(ang) };
+            }
+        }
+    }
+
+    function lookupField(px, py) {
+        const x = Math.max(0, Math.min(cols - 1, Math.floor(px / scl)));
+        const y = Math.max(0, Math.min(rows - 1, Math.floor(py / scl)));
+        return field[x + y * cols] || { x: 0, y: 0 };
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // DRAW
+    // ══════════════════════════════════════════════════════════════════════
+    function draw() {
+        const sc = SCENES[currentSceneIndex];
+        // Faint background fade for trails
+        noStroke();
+        fill(sc.bg[0], sc.bg[1], sc.bg[2], 18);
+        rect(0, 0, width, height);
+
+        computeField();
+        t += 0.01;
+
+        for (let p of particles) {
+            p.update();
+            p.display(sc.palette);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // PARTICLE
+    // ══════════════════════════════════════════════════════════════════════
+    class Particle {
+        constructor() {
+            this.reset();
+            this.life = random(this.maxLife);
+        }
+        reset() {
+            const sc = SCENES[currentSceneIndex];
+            if (sc.field === 'radial' || sc.field === 'curl') {
+                // spawn near center for bloom feel
+                const r = random(0, width * 0.18);
+                const a = random(TWO_PI);
+                this.x = width / 2 + Math.cos(a) * r;
+                this.y = height / 2 + Math.sin(a) * r;
+            } else if (sc.field === 'wave') {
+                this.x = random(width);
+                this.y = random(height * 0.4, height);
+            } else {
+                this.x = random(width);
+                this.y = random(height);
+            }
+            this.px = this.x;
+            this.py = this.y;
+            this.vx = 0;
+            this.vy = 0;
+            this.maxLife = random(60, 220);
+            this.life = this.maxLife;
+            this.colorIdx = floor(random(5));
+        }
+        update() {
+            this.px = this.x;
+            this.py = this.y;
+            const f = lookupField(this.x, this.y);
+            this.vx += f.x * params.fieldStrength * 0.15;
+            this.vy += f.y * params.fieldStrength * 0.15;
+            // gentle damping
+            this.vx *= 0.92;
+            this.vy *= 0.92;
+            this.x += this.vx * params.flowSpeed;
+            this.y += this.vy * params.flowSpeed;
+            this.life--;
+            if (this.life <= 0 ||
+                this.x < -20 || this.x > width + 20 ||
+                this.y < -20 || this.y > height + 20) {
+                this.reset();
+            }
+        }
+        display(palette) {
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            const age = this.life / this.maxLife;
+            // pick color by speed & age
+            let idx = this.colorIdx;
+            if (speed > 1.5) idx = Math.min(4, idx + 1);
+            const c = palette[idx % palette.length];
+            const col = color(c);
+            const alpha = Math.floor(map(age, 0, 1, 30, 180));
+            stroke(red(col), green(col), blue(col), alpha);
+            strokeWeight(map(speed, 0, 4, 0.6, 2.2));
+            const trail = params.trailLength;
+            const dx = this.x - this.px;
+            const dy = this.y - this.py;
+            // draw a short trail
+            for (let k = 0; k < trail; k++) {
+                const a = (1 - k / trail) * alpha;
+                stroke(red(col), green(col), blue(col), a);
+                const sx = this.x - dx * k;
+                const sy = this.y - dy * k;
+                const ex = this.x - dx * (k + 1);
+                const ey = this.y - dy * (k + 1);
+                line(sx, sy, ex, ey);
+            }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // UI HANDLERS
+    // ══════════════════════════════════════════════════════════════════════
+    function updateParam(name, value) {
+        if (name === 'particleCount') {
+            params.particleCount = parseInt(value);
+            document.getElementById('particleCount-value').textContent = value;
+            // resize particle array
+            if (particles.length < params.particleCount) {
+                while (particles.length < params.particleCount) particles.push(new Particle());
+            } else {
+                particles.length = params.particleCount;
+            }
+        } else if (name === 'noiseScale') {
+            params.noiseScale = parseFloat(value);
+            document.getElementById('noiseScale-value').textContent = Number(value).toFixed(4);
+        } else if (name === 'flowSpeed') {
+            params.flowSpeed = parseFloat(value);
+            document.getElementById('flowSpeed-value').textContent = Number(value).toFixed(1);
+        } else if (name === 'trailLength') {
+            params.trailLength = parseInt(value);
+            document.getElementById('trailLength-value').textContent = value;
+        } else if (name === 'fieldStrength') {
+            params.fieldStrength = parseFloat(value);
+            document.getElementById('fieldStrength-value').textContent = Number(value).toFixed(1);
+        }
+    }
+
+    function updateSeedDisplay() {
+        document.getElementById('seed-input').value = params.seed;
+        document.getElementById('scene-seed').textContent = params.seed;
+    }
+    function updateSeed() {
+        const v = parseInt(document.getElementById('seed-input').value);
+        if (v && v > 0) {
+            params.seed = v;
+            initializeSystem();
+        } else {
+            updateSeedDisplay();
+        }
+    }
+    function previousSeed() {
+        params.seed = Math.max(1, params.seed - 1);
+        updateSeedDisplay();
+        initializeSystem();
+    }
+    function nextSeed() {
+        params.seed = params.seed + 1;
+        updateSeedDisplay();
+        initializeSystem();
+    }
+    function randomSeedAndUpdate() {
+        params.seed = Math.floor(Math.random() * 999999) + 1;
+        updateSeedDisplay();
+        initializeSystem();
+    }
+    function resetParameters() {
+        applySceneDefaults(currentSceneIndex, true);
+        updateSeedDisplay();
+        initializeSystem();
+    }
+    function downloadPNG() {
+        saveCanvas('prismatic-genesis-' + SCENES[currentSceneIndex].key + '-seed' + params.seed, 'png');
+    }
+
+    window.addEventListener('load', function () {
+        updateSeedDisplay();
+    });
+    </script>
+</body>
+</html>
