@@ -113,14 +113,6 @@
 
         .hint-pill.fade { opacity: 0; }
 
-        /* Dark-palette mode: light text on dark backgrounds */
-        body.dark-pal .title-card h1 { color: #f5f3ee; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-        body.dark-pal .title-card .meta { color: rgba(245,243,238,0.6); }
-        body.dark-pal .title-card .meta b { color: #e8a060; }
-        body.dark-pal .panel-toggle { background: rgba(20,20,20,0.6); color: #f5f3ee; border-color: rgba(255,255,255,0.15); }
-        body.dark-pal .panel-toggle:hover { border-color: var(--accent); color: var(--accent); }
-        body.dark-pal .hint-pill { background: rgba(245,243,238,0.85); color: #1a1a1a; }
-
         /* ── Gear button (opens panel) ── */
         .panel-toggle {
             position: fixed;
@@ -422,7 +414,7 @@
 
         <div class="title-card">
             <h1>Flow Field Genesis</h1>
-            <div class="meta">Palette <b id="tc-palette">Misty</b> · Seed <b id="tc-seed">12345</b></div>
+            <div class="meta">Palette <b id="tc-palette">Lavender</b> · Seed <b id="tc-seed">12345</b></div>
         </div>
 
         <button class="panel-toggle" id="panel-toggle" aria-label="Open controls">
@@ -457,28 +449,28 @@
                 <div class="section-label">Parameters</div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Particles</span><span class="value" id="v-count">18000</span></div>
-                    <input type="range" id="s-count" min="5000" max="40000" step="1000" value="18000">
+                    <div class="label-row"><span class="label">Particles</span><span class="value" id="v-count">6000</span></div>
+                    <input type="range" id="s-count" min="2000" max="15000" step="500" value="6000">
                 </div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Flow Speed</span><span class="value" id="v-speed">1.0</span></div>
-                    <input type="range" id="s-speed" min="0.2" max="3.0" step="0.1" value="1.0">
+                    <div class="label-row"><span class="label">Flow Speed</span><span class="value" id="v-speed">0.6</span></div>
+                    <input type="range" id="s-speed" min="0.1" max="2.0" step="0.1" value="0.6">
                 </div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Noise Scale</span><span class="value" id="v-noise">0.0035</span></div>
-                    <input type="range" id="s-noise" min="0.0008" max="0.0120" step="0.0002" value="0.0035">
+                    <div class="label-row"><span class="label">Noise Scale</span><span class="value" id="v-noise">0.0030</span></div>
+                    <input type="range" id="s-noise" min="0.0008" max="0.0120" step="0.0002" value="0.0030">
                 </div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Density Pull</span><span class="value" id="v-density">0.6</span></div>
-                    <input type="range" id="s-density" min="0" max="2.0" step="0.1" value="0.6">
+                    <div class="label-row"><span class="label">Density Pull</span><span class="value" id="v-density">0.8</span></div>
+                    <input type="range" id="s-density" min="0" max="2.0" step="0.1" value="0.8">
                 </div>
 
                 <div class="slider-group">
-                    <div class="label-row"><span class="label">Trail Fade</span><span class="value" id="v-trail">0.12</span></div>
-                    <input type="range" id="s-trail" min="0.02" max="0.40" step="0.02" value="0.12">
+                    <div class="label-row"><span class="label">Trail Fade</span><span class="value" id="v-trail">0.28</span></div>
+                    <input type="range" id="s-trail" min="0.10" max="0.60" step="0.02" value="0.28">
                 </div>
             </div>
 
@@ -492,7 +484,7 @@
             </div>
         </div>
 
-        <div class="hint-pill" id="hint">Drag to create wind · Tap to seed new life</div>
+        <div class="hint-pill" id="hint">Drag to disturb · Tap to seed new life</div>
     </div>
 
     <script>
@@ -503,75 +495,57 @@
     // Density field modulates gathering and whitespace.
     // ══════════════════════════════════════════════════════════════════════
 
-    // ── Curated palettes matching the 9-grid reference image ──
-    //   dark: true  → dark background, particles use ADD blend (luminous)
-    //   dark: false → light background, particles use BLEND (source-over)
+    // ── Palettes: white background, soft purple-blue gradient family ──
     const PALETTES = [
         {
-            name: 'Cyan Bloom',
+            name: 'Lavender',
             colors: [
-                [80, 200, 160], [240, 200, 60], [180, 220, 240],
-                [120, 180, 100], [255, 240, 180], [60, 140, 180]
+                [107, 127, 212], [155, 143, 224], [180, 168, 232],
+                [139, 160, 232], [196, 184, 240], [120, 100, 200]
             ],
-            bg: [185, 225, 230], dark: false
+            bg: [250, 249, 252]
         },
         {
-            name: 'Scatter',
+            name: 'Dawn',
             colors: [
-                [220, 160, 50], [200, 80, 60], [60, 50, 50],
-                [230, 120, 40], [180, 200, 80], [240, 200, 140]
+                [180, 140, 200], [200, 160, 220], [220, 180, 230],
+                [160, 120, 190], [240, 200, 220], [140, 100, 170]
             ],
-            bg: [245, 240, 228], dark: false
+            bg: [252, 250, 250]
         },
         {
-            name: 'Coral',
+            name: 'Breath',
             colors: [
-                [200, 60, 50], [220, 100, 80], [240, 160, 130],
-                [180, 40, 40], [250, 200, 170], [120, 30, 30]
+                [100, 140, 200], [130, 170, 220], [170, 200, 235],
+                [110, 150, 210], [200, 220, 240], [80, 120, 185]
             ],
-            bg: [238, 225, 215], dark: false
+            bg: [249, 250, 252]
         },
         {
-            name: 'Deep Blue',
+            name: 'Moonlit',
             colors: [
-                [255, 255, 255], [180, 210, 240], [120, 160, 220],
-                [200, 220, 255], [90, 130, 200], [230, 240, 255]
+                [120, 130, 180], [150, 160, 200], [180, 190, 220],
+                [100, 110, 160], [210, 215, 235], [90, 100, 145]
             ],
-            bg: [18, 36, 72], dark: true
-        },
-        {
-            name: 'Rain',
-            colors: [
-                [255, 255, 255], [200, 220, 240], [160, 180, 220],
-                [230, 235, 250], [120, 140, 190], [240, 245, 255]
-            ],
-            bg: [12, 18, 35], dark: true
-        },
-        {
-            name: 'Ice',
-            colors: [
-                [255, 255, 255], [200, 230, 245], [170, 200, 235],
-                [220, 240, 255], [140, 180, 220], [240, 250, 255]
-            ],
-            bg: [25, 45, 75], dark: true
+            bg: [251, 251, 253]
         }
     ];
 
-    // ── Particle species (NOT dots) ──
-    //   0 = translucent petals (curved)
-    //   1 = tiny paper pieces (rotated rects)
-    //   2 = thin lines (velocity streaks)
-    //   3 = geometric fragments (triangles)
+    // ── Particle species: independent visual elements (NOT lines) ──
+    //   0 = soft dot (translucent filled circle)
+    //   1 = petal (curved organic shape)
+    //   2 = tiny square (rotated rectangle)
+    //   3 = small triangle (geometric fragment)
     const TYPES = 4;
 
     // ── Global state ──
     let palIdx = 0;
     let seed = 12345;
-    let pCount = 18000;
-    let flowSpeed = 1.0;
-    let noiseScale = 0.0035;
-    let densityPull = 0.6;
-    let trailFade = 0.12;
+    let pCount = 6000;
+    let flowSpeed = 0.6;
+    let noiseScale = 0.0030;
+    let densityPull = 0.8;
+    let trailFade = 0.28;
     let paused = false;
 
     // ── Particle data (typed arrays for performance) ──
@@ -674,7 +648,7 @@
         maxLife[i] = 200 + Math.random() * 400;
         life[i] = initial ? Math.random() * maxLife[i] : maxLife[i];
         alpha[i] = 0;
-        size[i] = 1.5 + Math.random() * 4.5;
+        size[i] = 2 + Math.random() * 7;
         hue[i] = (Math.random() * palette.colors.length) | 0;
         type[i] = (Math.random() * TYPES) | 0;
     }
@@ -771,7 +745,7 @@
             // change color & type for fresh visual
             hue[idx] = (Math.random() * palette.colors.length) | 0;
             type[idx] = (Math.random() * TYPES) | 0;
-            size[idx] = 1.5 + Math.random() * 4.5;
+            size[idx] = 2 + Math.random() * 7;
         }
     }
 
@@ -813,13 +787,12 @@
         const speed = flowSpeed;
         const pull = densityPull;
         const inv = 1 / cellSize;
-        const vmax = 3.5;
+        const vmax = 2.0;
         const cc = colorCache;
         const stepMax = ALPHA_STEPS - 1;
 
-        // Dark palettes → ADD blend (luminous particles on dark bg)
-        // Light palettes → BLEND (source-over, natural layering)
-        ctx.globalCompositeOperation = palette.dark ? 'lighter' : 'source-over';
+        // All palettes use BLEND (source-over) — soft translucent layering on white
+        ctx.globalCompositeOperation = 'source-over';
         ctx.lineCap = 'round';
 
         for (let i = 0; i < N; i++) {
@@ -849,8 +822,8 @@
                 }
             }
 
-            vx[i] = vx[i] * 0.92 + fx;
-            vy[i] = vy[i] * 0.92 + fy;
+            vx[i] = vx[i] * 0.95 + fx;
+            vy[i] = vy[i] * 0.95 + fy;
 
             const vmag = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]);
             if (vmag > vmax) {
@@ -867,7 +840,7 @@
             let a = 1;
             if (lr > 0.85) a = (1 - lr) / 0.15;
             else if (lr < 0.2) a = lr / 0.2;
-            const al = a * 0.65;
+            const al = a * 0.42;
 
             if (px[i] < -10) px[i] = W + 10;
             else if (px[i] > W + 10) px[i] = -10;
@@ -892,28 +865,26 @@
             ctx.rotate(ang[i]);
 
             if (ti === 0) {
+                // SOFT DOT — translucent filled circle
+                ctx.beginPath();
+                ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (ti === 1) {
                 // PETAL — translucent curved shape
                 ctx.beginPath();
                 ctx.moveTo(0, -s * 0.5);
                 ctx.quadraticCurveTo(s * 0.8, 0, 0, s * 0.5);
                 ctx.quadraticCurveTo(-s * 0.4, 0, 0, -s * 0.5);
                 ctx.fill();
-            } else if (ti === 1) {
-                // PAPER — tiny rotated rectangle
-                ctx.fillRect(-s * 0.5, -s * 0.25, s, s * 0.5);
             } else if (ti === 2) {
-                // LINE — thin velocity streak
-                ctx.lineWidth = Math.max(0.5, s * 0.15);
-                ctx.beginPath();
-                ctx.moveTo(-vx[i] * 1.5, -vy[i] * 1.5);
-                ctx.lineTo(vx[i] * 1.5, vy[i] * 1.5);
-                ctx.stroke();
+                // SQUARE — tiny rotated rectangle
+                ctx.fillRect(-s * 0.4, -s * 0.4, s * 0.8, s * 0.8);
             } else {
-                // FRAGMENT — triangle
+                // FRAGMENT — small triangle
                 ctx.beginPath();
-                ctx.moveTo(0, -s * 0.6);
-                ctx.lineTo(s * 0.55, s * 0.4);
-                ctx.lineTo(-s * 0.55, s * 0.4);
+                ctx.moveTo(0, -s * 0.55);
+                ctx.lineTo(s * 0.5, s * 0.35);
+                ctx.lineTo(-s * 0.5, s * 0.35);
                 ctx.closePath();
                 ctx.fill();
             }
@@ -953,8 +924,6 @@
         document.getElementById('canvas-container').style.background = bgCss;
         document.body.style.background = bgCss;
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bgCss);
-        // Toggle dark-mode class so title text becomes light on dark palettes
-        document.body.classList.toggle('dark-pal', palette.dark);
         document.getElementById('tc-palette').textContent = palette.name;
         buildPaletteUI();
     }
