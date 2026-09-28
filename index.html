@@ -142,6 +142,9 @@
         .scene-card.koi::before { background: radial-gradient(circle at 50% 30%, rgba(106,183,200,0.25), transparent 70%); }
         .scene-card.autumn::before { background: radial-gradient(circle at 50% 30%, rgba(232,124,58,0.25), transparent 70%); }
         .scene-card.butterfly::before { background: radial-gradient(circle at 50% 30%, rgba(232,196,104,0.25), transparent 70%); }
+        .scene-card.spirit::before { background: radial-gradient(circle at 50% 30%, rgba(180,160,255,0.28), transparent 70%); }
+        .scene-card.crane::before { background: radial-gradient(circle at 50% 30%, rgba(255,190,160,0.25), transparent 70%); }
+        .scene-card.jelly::before { background: radial-gradient(circle at 50% 30%, rgba(120,200,255,0.28), transparent 70%); }
         .scene-card:hover, .scene-card.active {
             border-color: rgba(255,255,255,0.35);
             transform: translateY(-3px);
@@ -639,6 +642,21 @@
                     <div class="scene-name">Butterfly Garden</div>
                     <div class="scene-desc">Wings &amp; swirl</div>
                 </div>
+                <div class="scene-card spirit" data-scene="spirit">
+                    <div class="scene-icon">👤</div>
+                    <div class="scene-name">Spirit Vale</div>
+                    <div class="scene-desc">Little souls</div>
+                </div>
+                <div class="scene-card crane" data-scene="crane">
+                    <div class="scene-icon">🕊</div>
+                    <div class="scene-name">Crane Sky</div>
+                    <div class="scene-desc">Flock &amp; glide</div>
+                </div>
+                <div class="scene-card jelly" data-scene="jelly">
+                    <div class="scene-icon">🪼</div>
+                    <div class="scene-name">Abyss Bloom</div>
+                    <div class="scene-desc">Deep drift</div>
+                </div>
             </div>
             <button class="start-btn" id="start-btn">Begin</button>
         </div>
@@ -683,6 +701,9 @@
                 <button data-scene="koi" class="active">Koi</button>
                 <button data-scene="autumn">Autumn</button>
                 <button data-scene="butterfly">Wings</button>
+                <button data-scene="spirit">Spirits</button>
+                <button data-scene="crane">Cranes</button>
+                <button data-scene="jelly">Jellies</button>
             </div>
         </div>
 
@@ -797,6 +818,66 @@
             flock: 0.7,
             flowWeight: 0.4,
             defaultCount: 500
+        },
+        spirit: {
+            name: 'Spirit Vale',
+            sub: 'Drag mist · Tap call · Hold lantern',
+            bg: ['#1a1030', '#120a24', '#0a0616'],
+            bgTop: '#241640',
+            bgBot: '#080512',
+            creature: 'spirit',
+            colors: [
+                [180, 220, 255],  // pale cyan
+                [220, 200, 255],  // lavender
+                [255, 240, 220],  // warm white
+                [140, 190, 240],  // mist blue
+                [255, 255, 255],  // pure white
+                [200, 170, 250]   // violet
+            ],
+            blend: 'screen',
+            flock: 0.35,
+            flowWeight: 0.55,
+            defaultCount: 500
+        },
+        crane: {
+            name: 'Crane Sky',
+            sub: 'Drag gusts · Tap flock · 2×Tap scatter',
+            bg: ['#2a1a30', '#1c1224', '#100a18'],
+            bgTop: '#3a2340',
+            bgBot: '#0c0812',
+            creature: 'crane',
+            colors: [
+                [255, 235, 220],  // warm white
+                [255, 200, 180],  // blush
+                [240, 220, 240],  // lilac white
+                [255, 210, 140],  // gold light
+                [230, 230, 255],  // ice white
+                [255, 180, 160]   // salmon
+            ],
+            blend: 'screen',
+            flock: 1.3,
+            flowWeight: 0.35,
+            defaultCount: 400
+        },
+        jelly: {
+            name: 'Abyss Bloom',
+            sub: 'Drag currents · Tap pulse · Hold lure',
+            bg: ['#0a0828', '#060418', '#02010a'],
+            bgTop: '#120c3a',
+            bgBot: '#010008',
+            creature: 'jelly',
+            colors: [
+                [120, 220, 255],  // cyan
+                [255, 140, 220],  // pink
+                [170, 140, 255],  // violet
+                [120, 255, 200],  // mint
+                [255, 200, 240],  // pale pink
+                [90, 160, 255]    // blue
+            ],
+            blend: 'screen',
+            flock: 0.2,
+            flowWeight: 0.65,
+            defaultCount: 350
         }
     };
 
@@ -946,6 +1027,9 @@
     // ══════════════════════════════════════════════════════════════════════
     // PARTICLE INIT
     // ══════════════════════════════════════════════════════════════════════
+    const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) < 820);
+    const DEVICE_SCALE = IS_MOBILE ? 0.55 : 1.0;   // mobile renders fewer creatures
+
     function initParticles(count) {
         N = count;
         px = new Float32Array(N);
@@ -1220,7 +1304,7 @@
             for (let i = 0; i < 30; i++) {
                 decors.push({ kind: 'spark', x: Math.random() * W, y: Math.random() * H, r: 0.6 + Math.random() * 1.6, vy: 0.3 + Math.random() * 0.7, sway: Math.random() * Math.PI * 2 });
             }
-        } else {
+        } else if (sceneKey === 'butterfly') {
             // fireflies + flower silhouettes + light shafts
             for (let i = 0; i < 22; i++) {
                 decors.push({ kind: 'firefly', x: Math.random() * W, y: Math.random() * H, ph: Math.random() * Math.PI * 2, sp: 0.3 + Math.random() * 0.6 });
@@ -1230,6 +1314,37 @@
             }
             for (let i = 0; i < 3; i++) {
                 decors.push({ kind: 'shaft', x: Math.random() * W, w: 50 + Math.random() * 70, a: 0.04 + Math.random() * 0.05 });
+            }
+        } else if (sceneKey === 'spirit') {
+            // floating lanterns + ground mist + drifting soul motes
+            for (let i = 0; i < 8; i++) {
+                decors.push({ kind: 'lantern', x: Math.random() * W, y: Math.random() * H * 0.7, r: 6 + Math.random() * 8, vy: 0.08 + Math.random() * 0.15, ph: Math.random() * Math.PI * 2 });
+            }
+            for (let i = 0; i < 3; i++) {
+                decors.push({ kind: 'valemist', y: H * (0.6 + i * 0.13), h: 40 + Math.random() * 40, a: 0.05 + Math.random() * 0.03, sp: 0.06 + Math.random() * 0.12, off: Math.random() * W });
+            }
+            for (let i = 0; i < 18; i++) {
+                decors.push({ kind: 'soulmote', x: Math.random() * W, y: Math.random() * H, ph: Math.random() * Math.PI * 2, sp: 0.2 + Math.random() * 0.4 });
+            }
+        } else if (sceneKey === 'crane') {
+            // drifting clouds + moon + star sparks
+            for (let i = 0; i < 6; i++) {
+                decors.push({ kind: 'cloud', x: Math.random() * W, y: Math.random() * H * 0.7, r: 40 + Math.random() * 70, vx: 0.1 + Math.random() * 0.2, a: 0.04 + Math.random() * 0.05 });
+            }
+            decors.push({ kind: 'moon', x: W * 0.78, y: H * 0.16, r: Math.min(W, H) * 0.09 });
+            for (let i = 0; i < 26; i++) {
+                decors.push({ kind: 'star', x: Math.random() * W, y: Math.random() * H * 0.6, r: 0.5 + Math.random() * 1.2, ph: Math.random() * Math.PI * 2 });
+            }
+        } else {
+            // jelly scene: glowing plankton + deep light shafts + marine snow
+            for (let i = 0; i < 34; i++) {
+                decors.push({ kind: 'plankton', x: Math.random() * W, y: Math.random() * H, r: 0.5 + Math.random() * 1.4, ph: Math.random() * Math.PI * 2, sp: 0.1 + Math.random() * 0.3 });
+            }
+            for (let i = 0; i < 3; i++) {
+                decors.push({ kind: 'deepshaft', x: Math.random() * W, w: 60 + Math.random() * 90, a: 0.05 + Math.random() * 0.05, tilt: 0.1 + Math.random() * 0.2 });
+            }
+            for (let i = 0; i < 20; i++) {
+                decors.push({ kind: 'snow', x: Math.random() * W, y: Math.random() * H, r: 0.4 + Math.random() * 0.9, vy: 0.1 + Math.random() * 0.2, sway: Math.random() * Math.PI * 2 });
             }
         }
     }
@@ -1324,6 +1439,105 @@
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = g;
                 ctx.fillRect(d.x, 0, d.w, H);
+            } else if (d.kind === 'lantern') {
+                d.y -= d.vy;
+                d.ph += 0.02;
+                d.x += Math.sin(d.ph) * 0.25;
+                if (d.y < -20) { d.y = H + 20; d.x = Math.random() * W; }
+                const flick = 0.7 + 0.3 * Math.sin(t * 5 + d.ph * 3);
+                const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 3);
+                g.addColorStop(0, `rgba(255,190,110,${0.5 * flick})`);
+                g.addColorStop(1, 'rgba(255,190,110,0)');
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.fillRect(d.x - d.r * 3, d.y - d.r * 3, d.r * 6, d.r * 6);
+                ctx.globalAlpha = 0.75 * flick;
+                ctx.fillStyle = 'rgba(255,215,150,1)';
+                ctx.beginPath();
+                ctx.ellipse(d.x, d.y, d.r * 0.7, d.r, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (d.kind === 'valemist') {
+                d.off += d.sp;
+                if (d.off > W + 200) d.off = -200;
+                const g = ctx.createLinearGradient(0, d.y, 0, d.y + d.h);
+                g.addColorStop(0, 'rgba(170,150,255,0)');
+                g.addColorStop(0.5, `rgba(170,150,255,${d.a})`);
+                g.addColorStop(1, 'rgba(170,150,255,0)');
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.fillRect(d.off - W, d.y, W * 2, d.h);
+            } else if (d.kind === 'soulmote') {
+                d.ph += d.sp * 0.04;
+                d.x += Math.sin(d.ph) * 0.5;
+                d.y += Math.cos(d.ph * 0.8) * 0.35;
+                ctx.globalAlpha = (0.2 + 0.3 * Math.sin(d.ph * 2)) * 0.8;
+                ctx.fillStyle = 'rgba(210,190,255,1)';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, 1.3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (d.kind === 'cloud') {
+                d.x += d.vx;
+                if (d.x - d.r * 2 > W) d.x = -d.r * 2;
+                const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r);
+                g.addColorStop(0, `rgba(255,200,210,${d.a})`);
+                g.addColorStop(1, 'rgba(255,200,210,0)');
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.fillRect(d.x - d.r, d.y - d.r * 0.5, d.r * 2, d.r);
+            } else if (d.kind === 'moon') {
+                const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 2.5);
+                g.addColorStop(0, 'rgba(255,235,200,0.5)');
+                g.addColorStop(0.4, 'rgba(255,235,200,0.15)');
+                g.addColorStop(1, 'rgba(255,235,200,0)');
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.fillRect(d.x - d.r * 2.5, d.y - d.r * 2.5, d.r * 5, d.r * 5);
+                ctx.globalAlpha = 0.85;
+                ctx.fillStyle = 'rgba(255,240,215,1)';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (d.kind === 'star') {
+                const tw = 0.3 + 0.7 * Math.max(0, Math.sin(t * 2 + d.ph));
+                ctx.globalAlpha = tw * 0.5;
+                ctx.fillStyle = 'rgba(255,240,220,1)';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (d.kind === 'plankton') {
+                d.ph += d.sp * 0.03;
+                d.y += Math.sin(d.ph) * 0.3 - 0.06;
+                d.x += Math.cos(d.ph * 0.7) * 0.2;
+                if (d.y < -10) d.y = H + 10;
+                const blink = 0.25 + 0.45 * Math.max(0, Math.sin(d.ph * 3));
+                ctx.globalAlpha = blink;
+                ctx.fillStyle = 'rgba(140,220,255,1)';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (d.kind === 'deepshaft') {
+                const g = ctx.createLinearGradient(d.x, 0, d.x + d.tilt * H, H);
+                g.addColorStop(0, `rgba(100,170,255,${d.a})`);
+                g.addColorStop(1, 'rgba(100,170,255,0)');
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.moveTo(d.x, 0);
+                ctx.lineTo(d.x + d.w, 0);
+                ctx.lineTo(d.x + d.w + d.tilt * H, H);
+                ctx.lineTo(d.x + d.tilt * H, H);
+                ctx.closePath();
+                ctx.fill();
+            } else if (d.kind === 'snow') {
+                d.y += d.vy;
+                d.sway += 0.02;
+                d.x += Math.sin(d.sway) * 0.3;
+                if (d.y > H + 10) { d.y = -10; d.x = Math.random() * W; }
+                ctx.globalAlpha = 0.25;
+                ctx.fillStyle = 'rgba(200,225,255,1)';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
         ctx.globalAlpha = 1;
@@ -1502,18 +1716,24 @@
                 ctx.globalAlpha = al;
             }
 
-            ctx.save();
-            ctx.translate(px[i], py[i]);
-            ctx.rotate(ang[i]);
+            // setTransform is faster than save/translate/rotate/restore
+            const ca = Math.cos(ang[i]), sa = Math.sin(ang[i]);
+            ctx.setTransform(ca, sa, -sa, ca, px[i], py[i]);
 
             if (creature === 'fish') {
                 drawFish(s, wingPhase[i], cs, colIdx[i]);
             } else if (creature === 'leaf') {
                 drawLeaf(s, cs, colIdx[i]);
-            } else {
+            } else if (creature === 'butterfly') {
                 drawButterfly(s, wingPhase[i], cs, colIdx[i]);
+            } else if (creature === 'spirit') {
+                drawSpirit(s, wingPhase[i], cs, colIdx[i]);
+            } else if (creature === 'crane') {
+                drawCrane(s, wingPhase[i], cs, colIdx[i]);
+            } else {
+                drawJelly(s, wingPhase[i], cs, colIdx[i]);
             }
-            ctx.restore();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
@@ -1643,6 +1863,85 @@
         ctx.moveTo(0, -s * 0.35);
         ctx.quadraticCurveTo(s * 0.15, -s * 0.55, s * 0.2, -s * 0.6);
         ctx.stroke();
+    }
+
+    // SPIRIT (little person / kodama) — glowing head + flowing wispy body
+    function drawSpirit(s, phase, color, ci) {
+        const bob = Math.sin(phase) * s * 0.06;
+        // aura glow
+        ctx.globalAlpha *= 0.3;
+        ctx.beginPath();
+        ctx.arc(0, bob, s * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha /= 0.3;
+        // wispy tail body (tapered curve downward)
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.28 + bob);
+        ctx.quadraticCurveTo(s * 0.34, s * 0.1 + bob, Math.sin(phase * 0.7) * s * 0.22, s * 0.62 + bob);
+        ctx.quadraticCurveTo(0, s * 0.42 + bob, -s * 0.28, s * 0.1 + bob);
+        ctx.quadraticCurveTo(-s * 0.34, -s * 0.1 + bob, 0, -s * 0.28 + bob);
+        ctx.closePath();
+        ctx.fill();
+        // head
+        ctx.beginPath();
+        ctx.arc(0, -s * 0.3 + bob, s * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        // eyes (two dots — kodama style)
+        ctx.fillStyle = '#0a0a14';
+        ctx.beginPath();
+        ctx.arc(-s * 0.1, -s * 0.33 + bob, s * 0.055, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(s * 0.1, -s * 0.33 + bob, s * 0.055, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // CRANE (bird) — two flapping wing arcs + body
+    function drawCrane(s, phase, color, ci) {
+        const flap = Math.sin(phase) * s * 0.3;
+        ctx.lineWidth = s * 0.11;
+        // left wing
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-s * 0.5, -s * 0.28 - flap, -s * 0.95, -flap);
+        ctx.stroke();
+        // right wing
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(s * 0.5, -s * 0.28 - flap, s * 0.95, -flap);
+        ctx.stroke();
+        // body dash
+        ctx.lineWidth = s * 0.09;
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.18, s * 0.02);
+        ctx.lineTo(s * 0.3, s * 0.05);
+        ctx.stroke();
+    }
+
+    // JELLYFISH — pulsing dome + wavy tentacles
+    function drawJelly(s, phase, color, ci) {
+        const pulse = 1 + Math.sin(phase) * 0.16;   // dome contracts/expands
+        // dome
+        ctx.beginPath();
+        ctx.ellipse(0, -s * 0.08, s * 0.42 * pulse, s * 0.34 / pulse, 0, Math.PI, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        // inner glow ring
+        ctx.globalAlpha *= 0.4;
+        ctx.beginPath();
+        ctx.ellipse(0, -s * 0.08, s * 0.28 * pulse, s * 0.2 / pulse, 0, Math.PI, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha /= 0.4;
+        // tentacles (3 wavy lines)
+        ctx.lineWidth = s * 0.05;
+        for (let k = -1; k <= 1; k++) {
+            ctx.beginPath();
+            ctx.moveTo(k * s * 0.2, s * 0.14);
+            const wob = Math.sin(phase + k * 1.3) * s * 0.16;
+            ctx.quadraticCurveTo(k * s * 0.2 + wob, s * 0.5, k * s * 0.14 - wob * 0.6, s * 0.85);
+            ctx.stroke();
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1901,8 +2200,9 @@
     function startGame() {
         document.getElementById('cover').classList.add('gone');
         gameStarted = true;
-        // apply scene + reinit
+        // apply scene + reinit (scaled for device)
         applyScene();
+        pCount = Math.round(scene.defaultCount * DEVICE_SCALE);
         // sync slider values to scene defaults
         document.getElementById('s-count').value = pCount;
         document.getElementById('v-count').textContent = pCount;
@@ -1953,7 +2253,7 @@
             b.addEventListener('click', () => {
                 sceneKey = b.dataset.scene;
                 applyScene();
-                pCount = scene.defaultCount;
+                pCount = Math.round(scene.defaultCount * DEVICE_SCALE);
                 document.getElementById('s-count').value = pCount;
                 document.getElementById('v-count').textContent = pCount;
                 initParticles(pCount);
@@ -2006,6 +2306,50 @@
         });
         document.getElementById('btn-save').addEventListener('click', () => {
             saveCanvas('genesis-' + sceneKey, 'png');
+        });
+
+        // ── PC keyboard shortcuts ──
+        //   Space=pause  1-6=scenes  S=save  R=regenerate  H=home  C=controls
+        window.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT') return;
+            const keys = ['koi', 'autumn', 'butterfly', 'spirit', 'crane', 'jelly'];
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!gameStarted) { startGame(); return; }
+                paused = !paused;
+                document.getElementById('btn-pause').textContent = paused ? 'Resume' : 'Pause';
+            } else if (e.key >= '1' && e.key <= '6') {
+                if (!gameStarted) return;
+                sceneKey = keys[parseInt(e.key) - 1];
+                applyScene();
+                pCount = Math.round(scene.defaultCount * DEVICE_SCALE);
+                document.getElementById('s-count').value = pCount;
+                document.getElementById('v-count').textContent = pCount;
+                initParticles(pCount);
+                document.getElementById('stat-count').textContent = pCount;
+                showToast(scene.name.toUpperCase());
+            } else if (e.key === 's' || e.key === 'S') {
+                if (gameStarted) saveCanvas('genesis-' + sceneKey, 'png');
+            } else if (e.key === 'r' || e.key === 'R') {
+                if (!gameStarted) return;
+                seed = Math.floor(Math.random() * 99999);
+                applySeed();
+                initParticles(pCount);
+            } else if (e.key === 'h' || e.key === 'H' || e.key === 'Escape') {
+                const panel = document.getElementById('panel');
+                if (panel.classList.contains('open')) {
+                    panel.classList.remove('open');
+                    document.getElementById('scrim').classList.remove('show');
+                } else if (gameStarted) {
+                    goHome();
+                }
+            } else if (e.key === 'c' || e.key === 'C') {
+                const panel = document.getElementById('panel');
+                const scrim = document.getElementById('scrim');
+                const open = !panel.classList.contains('open');
+                panel.classList.toggle('open', open);
+                scrim.classList.toggle('show', open);
+            }
         });
     })();
 
