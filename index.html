@@ -468,7 +468,7 @@
             <div id="canvas-container">
                 <div class="loading">Initializing generative art...</div>
             </div>
-            <div class="scene-label">Scene <b id="scene-name">Nebula Bloom</b> &middot; seed <b id="scene-seed">12345</b></div>
+            <div class="scene-label">Scene <b id="scene-name">Ripple Pond</b> &middot; seed <b id="scene-seed">12345</b></div>
         </div>
     </div>
 
@@ -478,63 +478,77 @@
     // Every scene is a different algorithm + palette. One seed, many worlds.
     // ══════════════════════════════════════════════════════════════════════
 
-    // ----- Scene definitions: each scene = palette + algorithm + RENDER STYLE + defaults -----
-    //   render modes give every scene a distinct visual language:
-    //     'bokeh'   – soft glowing orbs (dreamy nebula)
-    //     'web'     – constellation network of connecting lines
-    //     'ripple'  – expanding concentric rings (water droplets)
-    //     'facets'  – translucent rotating hexagons (crystalline)
-    //     'streaks' – long light streaks along flow (rain / aurora ribbons)
+    // ----- Scene definitions: each scene = a distinct art installation -----
+    //   Every scene has its own: algorithm, motion, visual style, interaction.
+    //   render   – how particles are drawn
+    //   field    – what flow field drives motion ('none' = no field)
+    //   interaction – how touch/mouse affects particles
+    //     'spawn'   – touch spawns new ripple centers
+    //     'swirl'   – touch creates a vortex (tangential force)
+    //     'wind'    – touch deflects particles away (wind gust)
+    //     'grow'    – touch grows & brightens nearby crystals
+    //     'attract' – touch pulls particles in
+    //   connect  – draw organic connection lines between nearby particles
     const SCENES = [
         {
-            key: 'nebula',
-            name: 'Scatter Drift',
-            palette: ['#1a3a6a', '#4a7ab5', '#9ab8d5', '#d07090', '#f0a8c0'],
+            key: 'ripple',
+            name: 'Ripple Pond',
+            palette: ['#0a3d3a', '#1c7050', '#3aa878', '#7fd8b0', '#cfeee0'],
+            bg: [176, 224, 214],
+            blend: 'BLEND',
+            field: 'none',
+            render: 'ripple',
+            interaction: 'spawn',
+            connect: false,
+            defaults: { particleCount: 280, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 14, fieldStrength: 0.6 }
+        },
+        {
+            key: 'petal',
+            name: 'Petal Drift',
+            palette: ['#3a5a8a', '#7aa0d0', '#c8d8f0', '#f0c8d8', '#ffffff'],
             bg: [206, 226, 242],
             blend: 'BLEND',
-            defaults: { particleCount: 1700, flowSpeed: 0.4, noiseScale: 0.0040, trailLength: 8, fieldStrength: 0.8 },
             field: 'flow',
-            render: 'scatter'
+            render: 'petal',
+            interaction: 'swirl',
+            connect: false,
+            defaults: { particleCount: 1500, flowSpeed: 0.5, noiseScale: 0.0040, trailLength: 8, fieldStrength: 1.0 }
         },
         {
-            key: 'quantum',
-            name: 'Quantum Web',
-            palette: ['#3a1402', '#7a2c0a', '#a64418', '#d97757', '#f5b8a0'],
-            bg: [240, 226, 206],
-            blend: 'BLEND',
-            defaults: { particleCount: 560, flowSpeed: 0.5, noiseScale: 0.0050, trailLength: 18, fieldStrength: 1.2 },
-            field: 'flow',
-            render: 'web'
-        },
-        {
-            key: 'solar',
-            name: 'Concentric Ripples',
-            palette: ['#0a3d2e', '#1c7050', '#3aa878', '#7fd8b0', '#e8f8ec'],
-            bg: [176, 224, 206],
-            blend: 'BLEND',
-            defaults: { particleCount: 300, flowSpeed: 0.3, noiseScale: 0.0040, trailLength: 14, fieldStrength: 0.6 },
-            field: 'radial',
-            render: 'ripple'
-        },
-        {
-            key: 'crystal',
-            name: 'Crystal Facets',
-            palette: ['#0a1c3a', '#2a4a7a', '#5a8bb8', '#a0c4e8', '#e0ecf8'],
-            bg: [216, 230, 242],
-            blend: 'BLEND',
-            defaults: { particleCount: 640, flowSpeed: 0.4, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.4 },
-            field: 'hex',
-            render: 'facets'
-        },
-        {
-            key: 'aurora',
-            name: 'Diagonal Rain',
+            key: 'rain',
+            name: 'Light Rain',
             palette: ['#0d1b2a', '#4a6b8a', '#9ab8d5', '#d5e8f5', '#ffffff'],
             bg: [10, 18, 32],
             blend: 'ADD',
-            defaults: { particleCount: 820, flowSpeed: 1.0, noiseScale: 0.0030, trailLength: 12, fieldStrength: 1.0 },
-            field: 'wave',
-            render: 'streaks'
+            field: 'none',
+            render: 'rain',
+            interaction: 'wind',
+            connect: false,
+            defaults: { particleCount: 650, flowSpeed: 1.2, noiseScale: 0.0030, trailLength: 10, fieldStrength: 0.8 }
+        },
+        {
+            key: 'crystal',
+            name: 'Crystal Bloom',
+            palette: ['#0a1c3a', '#2a4a7a', '#5a8bb8', '#a0c4e8', '#e0ecf8'],
+            bg: [216, 232, 245],
+            blend: 'BLEND',
+            field: 'hex',
+            render: 'crystal',
+            interaction: 'grow',
+            connect: false,
+            defaults: { particleCount: 520, flowSpeed: 0.4, noiseScale: 0.0060, trailLength: 10, fieldStrength: 1.2 }
+        },
+        {
+            key: 'ink',
+            name: 'Ink Bloom',
+            palette: ['#2a0a14', '#8a1c2a', '#d04050', '#f08898', '#fbe0e4'],
+            bg: [248, 224, 230],
+            blend: 'BLEND',
+            field: 'curl',
+            render: 'ink',
+            interaction: 'attract',
+            connect: true,
+            defaults: { particleCount: 820, flowSpeed: 0.7, noiseScale: 0.0050, trailLength: 12, fieldStrength: 1.3 }
         }
     ];
 
@@ -630,6 +644,20 @@
         pointer.active = true;
         pointer.strength = 1;
         glowBoost = 1;
+
+        // SPAWN interaction: touch spawns new ripple centers at the
+        // touch point (ripple pond scene).
+        const sc = SCENES[currentSceneIndex];
+        if (sc.interaction === 'spawn' && particles.length > 0) {
+            for (let i = 0; i < 4; i++) {
+                const p = particles[Math.floor(random(particles.length))];
+                p.spawnX = pointer.x + random(-8, 8);
+                p.spawnY = pointer.y + random(-8, 8);
+                p.x = p.spawnX;
+                p.y = p.spawnY;
+                p.life = p.maxLife;
+            }
+        }
     }
 
     function touchStarted() {
@@ -845,10 +873,23 @@
         fill(sc.bg[0], sc.bg[1], sc.bg[2], fadeAlpha);
         rect(0, 0, width, height);
 
-        // Recompute the flow field every 2nd frame — halves the per-frame
-        // noise() cost with no visible difference (field evolves slowly).
-        if (frameCount % 2 === 0) computeField();
+        // Recompute the flow field every 2nd frame — only for scenes that
+        // use a field (ripple & rain have field='none', skip the cost).
+        if (sc.field !== 'none' && frameCount % 2 === 0) computeField();
         t += 0.01;
+
+        // Auto-spawn ripples periodically so the pond is always alive even
+        // without touch input.
+        if (sc.render === 'ripple' && frameCount % 35 === 0) {
+            for (let i = 0; i < 2; i++) {
+                const p = particles[Math.floor(random(particles.length))];
+                p.spawnX = random(width);
+                p.spawnY = random(height);
+                p.x = p.spawnX;
+                p.y = p.spawnY;
+                p.life = p.maxLife;
+            }
+        }
 
         // 2) Subtle background depth dots — crisp small points, NOT big
         //    blurry halos. Adds depth without smearing the frame.
@@ -883,18 +924,16 @@
             glowBoost *= 0.90;
         }
 
-        // 4) Particles — dispatch per scene's render style.
-        //    For 'web' we update ALL particles first, then draw the
-        //    constellation lines, then draw node dots. Other modes update
-        //    + draw each particle inline.
+        // 4) Particles — for connect scenes (ink), update ALL particles
+        //    first, then draw organic branching lines, then draw nodes.
+        //    Other scenes update + draw each particle inline.
         blendMode(particleBlend);
         drawingContext.lineCap = 'round';
 
         const pal = paletteRGB;
-        const render = SCENES[currentSceneIndex].render;
-        if (render === 'web') {
+        if (sc.connect) {
             for (let i = 0, n = particles.length; i < n; i++) particles[i].update();
-            drawWebConnections(pal);
+            drawConnections(pal);
             for (let i = 0, n = particles.length; i < n; i++) particles[i].display(pal);
         } else {
             for (let i = 0, n = particles.length; i < n; i++) {
@@ -910,12 +949,13 @@
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // WEB MODE — spatial-hash connecting lines between nearby particles.
+    // CONNECTIONS — spatial-hash connecting lines between nearby particles.
+    // Used by the ink scene to create organic branching structures.
     // Drawn once per frame AFTER all particles are updated.
     // ══════════════════════════════════════════════════════════════════════
-    function drawWebConnections(pal) {
-        const cellSize = 55;
-        const maxD = 55, maxD2 = maxD * maxD;
+    function drawConnections(pal) {
+        const cellSize = 48;
+        const maxD = 48, maxD2 = maxD * maxD;
         const map = new Map();
         for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
@@ -924,7 +964,7 @@
             if (!cell) { cell = []; map.set(key, cell); }
             cell.push(i);
         }
-        strokeWeight(0.55);
+        strokeWeight(0.6);
         for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             const cx = Math.floor(p.x / cellSize);
@@ -935,14 +975,14 @@
                     if (!cell) continue;
                     for (let m = 0; m < cell.length; m++) {
                         const j = cell[m];
-                        if (j <= i) continue; // each pair once
+                        if (j <= i) continue;
                         const q = particles[j];
                         const ddx = p.x - q.x, ddy = p.y - q.y;
                         const d2 = ddx * ddx + ddy * ddy;
                         if (d2 > maxD2) continue;
-                        const t = 1 - d2 / maxD2;            // closeness 0..1
+                        const t = 1 - d2 / maxD2;
                         const c = pal[((p.colorIdx + q.colorIdx) >> 1) % pal.length];
-                        stroke(c[0], c[1], c[2], t * 110);
+                        stroke(c[0], c[1], c[2], t * 90);
                         line(p.x, p.y, q.x, q.y);
                     }
                 }
@@ -951,9 +991,10 @@
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // PARTICLE — dispatches rendering on SCENES[i].render so every scene
-    // has its own distinct visual language (bokeh / web / ripple / facets /
-    // streaks) instead of a single uniform particle style.
+    // PARTICLE — each scene has a fully distinct algorithm (spawn),
+    // motion (update), and visual style (display). No two scenes share
+    // the same particle behaviour, matching the reference image's 9-grid
+    // where every cell is a separate generative artwork.
     // ══════════════════════════════════════════════════════════════════════
     class Particle {
         constructor() {
@@ -962,28 +1003,46 @@
         }
         reset() {
             const sc = SCENES[currentSceneIndex];
-            if (sc.render === 'ripple') {
-                // Ripples emit from a fixed spawn point and expand outward;
-                // the particle barely drifts so rings stay clean circles.
+            this.render = sc.render;
+            this.fieldType = sc.field;
+            this.interaction = sc.interaction;
+
+            if (this.render === 'ripple') {
+                // Ripple: spawn at a point, expand outward as rings.
+                this.spawnX = random(width);
+                this.spawnY = random(height);
+                this.x = this.spawnX;
+                this.y = this.spawnY;
+                this.maxLife = random(140, 240);
+                this.maxRadius = random(25, Math.min(width, height) * 0.28);
+            } else if (this.render === 'rain') {
+                // Rain: start above the canvas, fall diagonally.
+                this.x = random(-60, width + 60);
+                this.y = random(-height, 0);
+                this.maxLife = random(300, 600);
+            } else if (this.render === 'crystal') {
+                // Crystal: scattered node with rotation + pulse.
                 this.x = random(width);
                 this.y = random(height);
-                this.spawnX = this.x;
-                this.spawnY = this.y;
-                this.maxLife = random(90, 170);
+                this.angle = random(TWO_PI);
+                this.rotSpeed = random(-0.006, 0.006);
+                this.pulsePhase = random(TWO_PI);
+                this.baseSize = random(4, 11);
+                this.maxLife = random(400, 800);
+            } else if (this.render === 'ink') {
+                // Ink: start near center, flow outward organically.
+                const r = random(0, width * 0.14);
+                const a = random(TWO_PI);
+                this.x = width / 2 + Math.cos(a) * r;
+                this.y = height / 2 + Math.sin(a) * r;
+                this.maxLife = random(80, 220);
             } else {
-                if (sc.field === 'radial' || sc.field === 'curl') {
-                    const r = random(0, width * 0.18);
-                    const a = random(TWO_PI);
-                    this.x = width / 2 + Math.cos(a) * r;
-                    this.y = height / 2 + Math.sin(a) * r;
-                } else if (sc.field === 'wave') {
-                    this.x = random(width);
-                    this.y = random(height * 0.4, height);
-                } else {
-                    this.x = random(width);
-                    this.y = random(height);
-                }
-                this.maxLife = random(60, 220);
+                // Petal: scattered, slow drift with rotation.
+                this.x = random(width);
+                this.y = random(height);
+                this.angle = random(TWO_PI);
+                this.rotSpeed = random(-0.012, 0.012);
+                this.maxLife = random(250, 550);
             }
             this.px = this.x;
             this.py = this.y;
@@ -991,166 +1050,200 @@
             this.vy = 0;
             this.life = this.maxLife;
             this.colorIdx = floor(random(5));
-            this.angle = random(TWO_PI);
         }
         update() {
             this.px = this.x;
             this.py = this.y;
             const sc = SCENES[currentSceneIndex];
 
-            if (sc.render === 'ripple') {
-                // Very gentle drift; the ring expands from spawnX/spawnY.
-                this.vx *= 0.95;
-                this.vy *= 0.95;
-                this.x += this.vx * params.flowSpeed * 0.25;
-                this.y += this.vy * params.flowSpeed * 0.25;
+            // ── RIPPLE: no motion, just expand & fade ──────────────────
+            if (this.render === 'ripple') {
                 this.life--;
                 if (this.life <= 0) this.reset();
                 return;
             }
 
-            const f = lookupField(this.x, this.y);
-            this.vx += f.x * params.fieldStrength * 0.15;
-            this.vy += f.y * params.fieldStrength * 0.15;
-
-            // Streaks scene: force a diagonal rain-like bias so all
-            // streaks fall at ~45°, matching the reference image cell.
-            if (sc.render === 'streaks') {
-                this.vx += 0.10;
-                this.vy += 0.18;
+            // ── RAIN: constant diagonal fall + wind interaction ───────
+            if (this.render === 'rain') {
+                const ang = Math.PI * 0.28;
+                this.vx = Math.cos(ang) * params.flowSpeed * 2.6;
+                this.vy = Math.sin(ang) * params.flowSpeed * 2.6;
+                // subtle noise variation so streaks aren't perfectly parallel
+                this.vx += (noise(this.x * 0.008, this.y * 0.008) - 0.5) * 0.4;
+                this.vy += (noise(this.x * 0.008 + 99, this.y * 0.008) - 0.5) * 0.3;
+                // WIND interaction: deflect streaks away from pointer
+                if (pointer.active) {
+                    const dx = this.x - pointer.x;
+                    const dy = this.y - pointer.y;
+                    const d2 = dx * dx + dy * dy;
+                    const R = Math.min(width, height) * 0.22;
+                    if (d2 < R * R) {
+                        const d = Math.sqrt(d2) + 0.001;
+                        const push = (1 - d / R) * 4 * pointer.strength;
+                        this.vx += (dx / d) * push;
+                        this.vy += (dy / d) * push;
+                    }
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                // recycle when off-screen
+                if (this.y > height + 30 || this.x > width + 30) {
+                    this.x = random(-60, width * 0.4);
+                    this.y = random(-height * 0.25, -10);
+                    this.life = this.maxLife;
+                }
+                return;
             }
 
-            // Touch / pointer attractor: pull nearby particles gently toward
-            // the pointer so the user can "stir" the bloom on mobile.
+            // ── PETAL / CRYSTAL / INK: flow-field driven ───────────────
+            if (this.fieldType !== 'none') {
+                const f = lookupField(this.x, this.y);
+                this.vx += f.x * params.fieldStrength * 0.15;
+                this.vy += f.y * params.fieldStrength * 0.15;
+            }
+
+            // Per-scene touch interaction
             if (pointer.active) {
                 const dx = pointer.x - this.x;
                 const dy = pointer.y - this.y;
                 const d2 = dx * dx + dy * dy;
-                const R = Math.min(width, height) * 0.42;
+                const R = Math.min(width, height) * 0.4;
                 if (d2 < R * R) {
                     const d = Math.sqrt(d2) + 0.001;
-                    const pull = (1 - d / R) * 0.8 * pointer.strength;
-                    this.vx += (dx / d) * pull;
-                    this.vy += (dy / d) * pull;
+                    const t = 1 - d / R;
+                    if (this.interaction === 'swirl') {
+                        // SWIRL: tangential force → vortex (petal scene)
+                        const pull = t * 1.4 * pointer.strength;
+                        this.vx += (-dy / d) * pull;
+                        this.vy += (dx / d) * pull;
+                    } else if (this.interaction === 'grow') {
+                        // GROW: pulse faster + slight pull (crystal scene)
+                        this.pulsePhase += 0.06;
+                        const pull = t * 0.3 * pointer.strength;
+                        this.vx += (dx / d) * pull;
+                        this.vy += (dy / d) * pull;
+                    } else if (this.interaction === 'attract') {
+                        // ATTRACT: pull toward pointer (ink scene)
+                        const pull = t * 0.9 * pointer.strength;
+                        this.vx += (dx / d) * pull;
+                        this.vy += (dy / d) * pull;
+                    }
                 }
             }
 
-            // gentle damping
+            // Rotation for petal & crystal
+            if (this.render === 'petal') {
+                this.angle += this.rotSpeed
+                    + (noise(this.x * 0.01, this.y * 0.01) - 0.5) * 0.025;
+            } else if (this.render === 'crystal') {
+                this.angle += this.rotSpeed;
+                this.pulsePhase += 0.025;
+            }
+
+            // Damping + integrate
             this.vx *= 0.92;
             this.vy *= 0.92;
             this.x += this.vx * params.flowSpeed;
             this.y += this.vy * params.flowSpeed;
             this.life--;
             if (this.life <= 0 ||
-                this.x < -20 || this.x > width + 20 ||
-                this.y < -20 || this.y > height + 20) {
+                this.x < -30 || this.x > width + 30 ||
+                this.y < -30 || this.y > height + 30) {
                 this.reset();
             }
         }
         display(pal) {
-            // CRISP rendering — small sharp shapes (dots / lines / rings /
-            // polygons), NO big blurry gradient sprites. Matches the clean
-            // generative-art aesthetic of the reference grid.
-            const render = SCENES[currentSceneIndex].render;
             const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
             const age = this.life / this.maxLife;          // 1 → 0
             let idx = this.colorIdx;
             if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
             const c = pal[idx % pal.length];
 
-            switch (render) {
-                case 'web': {
-                    // Small crisp node dot — the lines are drawn separately.
-                    noStroke();
-                    fill(c[0], c[1], c[2], 170 + age * 60);
-                    ellipse(this.x, this.y, 2.4);
-                    break;
-                }
+            switch (this.render) {
+                // ── RIPPLE: 4 nested concentric rings expanding ────────
                 case 'ripple': {
-                    // Multiple clean concentric rings expanding from spawn
-                    // point — mirrors the top-left reference cell (clean
-                    // nested green circles on cyan).
-                    const progress = 1 - age;                    // 0 → 1
-                    const baseR = progress * Math.min(width, height) * 0.22;
-                    const fade = (1 - progress) * (1 - progress * 0.4);
+                    const progress = 1 - age;
+                    const baseR = progress * this.maxRadius;
+                    const fade = (1 - progress) * (1 - progress * 0.3);
                     noFill();
-                    strokeWeight(1.2);
-                    for (let k = 0; k < 3; k++) {
-                        const r = baseR - k * 7;
+                    strokeWeight(1.3);
+                    for (let k = 0; k < 4; k++) {
+                        const r = baseR - k * 6;
                         if (r > 1) {
-                            stroke(c[0], c[1], c[2], 230 * fade * (1 - k * 0.28));
+                            stroke(c[0], c[1], c[2],
+                                   220 * fade * (1 - k * 0.22));
                             ellipse(this.spawnX, this.spawnY, r * 2);
                         }
                     }
-                    // tiny bright center dot
                     noStroke();
-                    fill(c[0], c[1], c[2], 200 * fade);
-                    ellipse(this.spawnX, this.spawnY, 2);
+                    fill(c[0], c[1], c[2], 180 * fade);
+                    ellipse(this.spawnX, this.spawnY, 2.5);
                     break;
                 }
-                case 'facets': {
-                    // Translucent hexagon with a thin crisp outline.
-                    const ang = Math.atan2(this.vy, this.vx);
-                    const fsize = 5 + speed * 2 + age * 2.5;
-                    const ca = Math.cos(ang), sa = Math.sin(ang);
-                    noStroke();
-                    fill(c[0], c[1], c[2], 22 + age * 28);
-                    beginShape();
-                    for (let k = 0; k < 6; k++) {
-                        const a = k / 6 * TWO_PI;
-                        const lx = Math.cos(a) * fsize, ly = Math.sin(a) * fsize;
-                        vertex(this.x + lx * ca - ly * sa, this.y + lx * sa + ly * ca);
-                    }
-                    endShape(CLOSE);
-                    // crisp outline
-                    stroke(c[0], c[1], c[2], 90);
-                    strokeWeight(0.6);
-                    noFill();
-                    beginShape();
-                    for (let k = 0; k < 6; k++) {
-                        const a = k / 6 * TWO_PI;
-                        const lx = Math.cos(a) * fsize, ly = Math.sin(a) * fsize;
-                        vertex(this.x + lx * ca - ly * sa, this.y + lx * sa + ly * ca);
-                    }
-                    endShape(CLOSE);
-                    break;
-                }
-                case 'streaks': {
-                    // Diagonal rain streak — fixed ~50° angle so all
-                    // streaks fall in parallel, matching the middle-right
-                    // reference cell. Length scales with speed.
-                    const angle = Math.PI * 0.28;
-                    const ux = Math.cos(angle), uy = Math.sin(angle);
-                    const stretch = 8 + speed * 6;
-                    stroke(c[0], c[1], c[2], Math.min(255, 80 + age * 150));
-                    strokeWeight(0.8 + speed * 0.15);
-                    line(this.x - ux * stretch, this.y - uy * stretch, this.x, this.y);
-                    break;
-                }
-                case 'scatter': {
-                    // Small rotated rectangle — distinct crisp shape, not a
-                    // blob. Mirrors the bottom-right reference cell (scattered
-                    // white/pink small rects on light blue, atmospheric).
+                // ── PETAL: small rotated rectangle ─────────────────────
+                case 'petal': {
                     push();
                     translate(this.x, this.y);
                     rotate(this.angle);
                     noStroke();
-                    fill(c[0], c[1], c[2], Math.min(255, 110 + age * 120));
-                    const w = 3 + Math.min(speed, 3) * 0.8;
-                    const h = 1.6 + Math.min(speed, 3) * 0.4;
+                    fill(c[0], c[1], c[2],
+                         Math.min(255, 120 + age * 100));
+                    const w = 4 + Math.min(speed, 3) * 0.6;
+                    const h = 2 + Math.min(speed, 3) * 0.3;
                     rect(-w / 2, -h / 2, w, h);
                     pop();
                     break;
                 }
-                case 'bokeh':
-                default: {
-                    // Crisp small dot + faint thin trail line.
-                    stroke(c[0], c[1], c[2], Math.min(255, 45 + age * 70));
-                    strokeWeight(0.6 + Math.min(speed, 4) * 0.2);
+                // ── RAIN: thin diagonal streak (prev → current) ────────
+                case 'rain': {
+                    stroke(c[0], c[1], c[2],
+                           Math.min(255, 90 + age * 140));
+                    strokeWeight(0.9);
+                    line(this.px, this.py, this.x, this.y);
+                    break;
+                }
+                // ── CRYSTAL: translucent pulsing hexagon + outline ──────
+                case 'crystal': {
+                    const pulse = 1 + 0.3 * Math.sin(this.pulsePhase);
+                    const fsize = this.baseSize * pulse + speed * 1.5;
+                    const ca = Math.cos(this.angle);
+                    const sa = Math.sin(this.angle);
+                    noStroke();
+                    fill(c[0], c[1], c[2], 25 + age * 30);
+                    beginShape();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k / 6 * TWO_PI;
+                        const lx = Math.cos(a) * fsize;
+                        const ly = Math.sin(a) * fsize;
+                        vertex(this.x + lx * ca - ly * sa,
+                               this.y + lx * sa + ly * ca);
+                    }
+                    endShape(CLOSE);
+                    stroke(c[0], c[1], c[2], 110);
+                    strokeWeight(0.7);
+                    noFill();
+                    beginShape();
+                    for (let k = 0; k < 6; k++) {
+                        const a = k / 6 * TWO_PI;
+                        const lx = Math.cos(a) * fsize;
+                        const ly = Math.sin(a) * fsize;
+                        vertex(this.x + lx * ca - ly * sa,
+                               this.y + lx * sa + ly * ca);
+                    }
+                    endShape(CLOSE);
+                    break;
+                }
+                // ── INK: dot + trail (connections drawn separately) ──────
+                case 'ink': {
+                    stroke(c[0], c[1], c[2],
+                           Math.min(255, 40 + age * 80));
+                    strokeWeight(0.8 + Math.min(speed, 4) * 0.15);
                     line(this.px, this.py, this.x, this.y);
                     noStroke();
-                    fill(c[0], c[1], c[2], Math.min(255, 130 + age * 90));
-                    ellipse(this.x, this.y, 1.8 + Math.min(speed, 4) * 0.5);
+                    fill(c[0], c[1], c[2],
+                         Math.min(255, 140 + age * 80));
+                    ellipse(this.x, this.y, 2.2 + Math.min(speed, 4) * 0.4);
                     break;
                 }
             }
