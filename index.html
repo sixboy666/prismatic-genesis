@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0519">
     <title>Prismatic Genesis - Generative Art Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +23,12 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -47,6 +56,27 @@
             overflow-y: auto;
             overflow-x: hidden;
             max-height: calc(100vh - 40px);
+        }
+
+        /* Mobile sidebar toggle button (hidden on desktop) */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 100;
+            background: var(--orange);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.4);
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
         }
 
         .sidebar h1 {
@@ -179,33 +209,36 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 22px;
+            height: 22px;
             background: var(--orange);
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.15s ease;
+            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.4);
         }
 
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
         input[type="range"]::-moz-range-thumb {
-            width: 16px; height: 16px;
+            width: 22px; height: 22px;
             background: var(--orange); border-radius: 50%;
             border: none; cursor: pointer;
+            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.4);
         }
 
         .button {
             background: var(--orange);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             width: 100%;
             font-family: inherit;
+            touch-action: manipulation;
         }
         .button:hover { background: #c86641; transform: translateY(-1px); }
         .button:active { transform: translateY(0); }
@@ -235,12 +268,14 @@
             box-shadow: 0 20px 50px rgba(20, 20, 19, 0.18);
             background: #000;
             position: relative;
+            touch-action: none;
         }
 
         #canvas-container canvas {
             display: block;
             width: 100% !important;
             height: auto !important;
+            touch-action: none;
         }
 
         .scene-label {
@@ -270,14 +305,103 @@
         }
 
         @media (max-width: 760px) {
-            .container { flex-direction: column; }
-            .sidebar { width: 100%; max-height: none; }
+            .container {
+                flex-direction: column;
+                padding: 8px;
+                gap: 8px;
+                min-height: 100vh;
+                min-height: 100dvh;
+            }
+
+            .sidebar-toggle {
+                display: flex;
+            }
+
+            /* Drawer-style sidebar on mobile */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 86%;
+                max-width: 360px;
+                height: 100%;
+                height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0 18px 18px 0;
+                transform: translateX(-105%);
+                transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 90;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+                padding: 20px 18px 32px;
+                overflow-y: auto;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            /* Scrim behind sidebar when open */
+            .scrim {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(20, 20, 19, 0.4);
+                z-index: 80;
+                opacity: 0;
+                transition: opacity 0.25s ease;
+            }
+            .scrim.show {
+                display: block;
+                opacity: 1;
+            }
+
+            .canvas-area {
+                width: 100%;
+                padding: 0;
+                margin-top: 4px;
+            }
+
+            #canvas-container {
+                max-width: 100%;
+                width: 100%;
+                border-radius: 10px;
+            }
+
+            .scene-label {
+                font-size: 12px;
+                padding: 0 4px;
+            }
+
+            .control-section h3 {
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+
+            .control-group { margin-bottom: 14px; }
+
+            .scene-tab {
+                padding: 12px 8px;
+                font-size: 12px;
+            }
+
+            .seed-input {
+                padding: 14px;
+                font-size: 16px; /* prevents iOS zoom */
+            }
+
+            .button {
+                padding: 14px 12px;
+                font-size: 14px;
+            }
+
+            .hint { font-size: 11px; }
         }
     </style>
 </head>
 <body>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Open controls">&#9776;</button>
+    <div class="scrim" id="scrim"></div>
     <div class="container">
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <h1>Prismatic Genesis</h1>
             <div class="subtitle">A generative art game. Each scene is a different physics. One seed, infinite worlds.</div>
 
@@ -336,7 +460,7 @@
                     <button class="button secondary" onclick="resetParameters()">Reset</button>
                 </div>
                 <button class="button tertiary" onclick="downloadPNG()">&#8627; Download PNG</button>
-                <p class="hint">Tip: switch scenes to explore a new physics. Each scene carries its own palette and field equations.</p>
+                <p class="hint">Tip: tap or drag on the canvas to attract particles. Switch scenes to explore a new physics — each carries its own palette and field equations.</p>
             </div>
         </div>
 
@@ -419,11 +543,22 @@
     let zoff = 0;
     let t = 0;
 
+    // ----- Touch / pointer attractor state -----
+    // When the user touches / drags on the canvas we record a normalized
+    // attractor point and pulse a force on nearby particles toward it.
+    let pointer = { active: false, x: 0, y: 0, strength: 0 };
+    let glowBoost = 0;        // briefly intensifies glow on tap
+
     // ══════════════════════════════════════════════════════════════════════
     // SETUP
     // ══════════════════════════════════════════════════════════════════════
     function setup() {
-        const cnv = createCanvas(900, 900);
+        // Size canvas to its parent so it adapts to viewport on mobile.
+        const host = document.getElementById('canvas-container');
+        const w = Math.max(280, Math.floor(host.clientWidth || 900));
+        // Square-ish, but never wider than viewport minus padding.
+        const h = Math.max(280, Math.min(w, Math.floor(window.innerHeight - 140)));
+        const cnv = createCanvas(w, h);
         cnv.parent('canvas-container');
         pixelDensity(1);             // big FPS win on HiDPI / retina screens
         const loading = document.querySelector('.loading');
@@ -431,7 +566,77 @@
         buildSceneTabs();
         applySceneDefaults(currentSceneIndex, false);
         initializeSystem();
+
+        // Mobile sidebar drawer behavior
+        const toggle = document.getElementById('sidebar-toggle');
+        const side   = document.getElementById('sidebar');
+        const scrim  = document.getElementById('scrim');
+        const openSidebar  = () => { side.classList.add('open');  scrim.classList.add('show'); };
+        const closeSidebar = () => { side.classList.remove('open'); scrim.classList.remove('show'); };
+        toggle.addEventListener('click', openSidebar);
+        scrim.addEventListener('click', closeSidebar);
+        // Close after picking a scene on mobile
+        document.getElementById('scene-tabs').addEventListener('click', (e) => {
+            if (e.target.closest('.scene-tab')) closeSidebar();
+        });
     }
+
+    // Resize canvas when viewport changes (orientation / window resize)
+    function windowResized() {
+        const host = document.getElementById('canvas-container');
+        const w = Math.max(280, Math.floor(host.clientWidth || width));
+        const h = Math.max(280, Math.min(w, Math.floor(window.innerHeight - 140)));
+        if (Math.abs(w - width) > 1 || Math.abs(h - height) > 1) {
+            resizeCanvas(w, h);
+            initializeSystem();
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // TOUCH / POINTER — attract particles & perturb field
+    // ══════════════════════════════════════════════════════════════════════
+    function _setPointerFromEvent(e) {
+        const host = document.getElementById('canvas-container');
+        const rect = host.getBoundingClientRect();
+        // p5 canvas is styled width:100%, so scale by display ratio.
+        const sx = width / rect.width;
+        const sy = height / rect.height;
+        let cx, cy;
+        if (e.touches && e.touches.length > 0) {
+            cx = e.touches[0].clientX;
+            cy = e.touches[0].clientY;
+        } else {
+            cx = e.clientX;
+            cy = e.clientY;
+        }
+        pointer.x = (cx - rect.left) * sx;
+        pointer.y = (cy - rect.top) * sy;
+        pointer.active = true;
+        pointer.strength = 1;
+        glowBoost = 1;
+    }
+
+    function touchStarted() {
+        _setPointerFromEvent(event);
+        return false; // prevent default scroll/zoom
+    }
+    function touchMoved() {
+        _setPointerFromEvent(event);
+        return false;
+    }
+    function touchEnded() {
+        pointer.active = false;
+        pointer.strength = 0;
+        return false;
+    }
+    // Mouse mirrors for desktop
+    function mousePressed() {
+        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+            _setPointerFromEvent(event);
+        }
+    }
+    function mouseDragged() { _setPointerFromEvent(event); }
+    function mouseReleased() { pointer.active = false; pointer.strength = 0; }
 
     // Pre-convert the active scene palette to raw RGB arrays so the hot
     // particle loop never calls p5.color()/red()/green()/blue() per frame.
@@ -498,6 +703,9 @@
         rows = Math.floor(height / scl);
         field = new Array(cols * rows);
         const sc = SCENES[currentSceneIndex];
+        // Reset blend mode before painting the background so a leftover
+        // ADD state from the previous draw never blows out the canvas.
+        blendMode(BLEND);
         background(sc.bg[0], sc.bg[1], sc.bg[2]);
         buildPaletteCache();
         for (let i = 0; i < params.particleCount; i++) {
@@ -569,9 +777,10 @@
     function draw() {
         const sc = SCENES[currentSceneIndex];
         // Faint background fade for trails. Lower alpha => longer persistence.
-        // trailLength now drives the fade so the "trail" feel is preserved
-        // without drawing many line segments per particle.
         const fadeAlpha = Math.max(6, 30 - params.trailLength);
+
+        // 1) Fade rect in normal blend mode (so trails decay correctly).
+        blendMode(BLEND);
         noStroke();
         fill(sc.bg[0], sc.bg[1], sc.bg[2], fadeAlpha);
         rect(0, 0, width, height);
@@ -581,12 +790,33 @@
         if (frameCount % 2 === 0) computeField();
         t += 0.01;
 
+        // 2) Soft glow halo at pointer position (dreamy "xiaohongshu" vibe).
+        if (pointer.active && glowBoost > 0.01) {
+            blendMode(ADD);
+            const pal = paletteRGB;
+            const hc = pal[pal.length - 1] || [255, 240, 220];
+            const haloR = Math.min(width, height) * (0.18 + glowBoost * 0.18);
+            noStroke();
+            for (let g = 3; g >= 1; g--) {
+                fill(hc[0], hc[1], hc[2], 14 * glowBoost / g);
+                ellipse(pointer.x, pointer.y, haloR * g * 0.7);
+            }
+            glowBoost *= 0.93; // decays after the touch ends
+        }
+
+        // 3) Particles in ADD blend — overlaps brighten into bloom-like glow.
+        blendMode(ADD);
+        drawingContext.lineCap = 'round';
+
         const pal = paletteRGB;
         for (let i = 0, n = particles.length; i < n; i++) {
             const p = particles[i];
             p.update();
             p.display(pal);
         }
+
+        // Reset to default blend so the next frame's fade rect behaves.
+        blendMode(BLEND);
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -626,6 +856,22 @@
             const f = lookupField(this.x, this.y);
             this.vx += f.x * params.fieldStrength * 0.15;
             this.vy += f.y * params.fieldStrength * 0.15;
+
+            // Touch / pointer attractor: pull nearby particles gently toward
+            // the pointer so the user can "stir" the bloom on mobile.
+            if (pointer.active) {
+                const dx = pointer.x - this.x;
+                const dy = pointer.y - this.y;
+                const d2 = dx * dx + dy * dy;
+                const R = Math.min(width, height) * 0.42;
+                if (d2 < R * R) {
+                    const d = Math.sqrt(d2) + 0.001;
+                    const pull = (1 - d / R) * 0.8 * pointer.strength;
+                    this.vx += (dx / d) * pull;
+                    this.vy += (dy / d) * pull;
+                }
+            }
+
             // gentle damping
             this.vx *= 0.92;
             this.vy *= 0.92;
@@ -639,18 +885,18 @@
             }
         }
         display(pal) {
-            // Single line segment per particle. The fading background rect
-            // already produces smooth persistent trails, so we no longer
-            // draw N stacked segments per particle (was the main bottleneck).
-            // pal is an array of cached [r,g,b] arrays (no p5.color() here).
+            // Single line segment per particle drawn in ADD blend mode so
+            // overlapping trails bloom into soft glow (xiaohongshu aesthetic).
             const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
             const age = this.life / this.maxLife;
             let idx = this.colorIdx;
             if (speed > 1.5) idx = Math.min(pal.length - 1, idx + 1);
             const c = pal[idx % pal.length];
-            const alpha = 40 + age * 140;                 // ~40..180
-            stroke(c[0], c[1], c[2], alpha);
-            strokeWeight(0.6 + Math.min(speed, 4) * 0.4); // 0.6..2.2
+
+            // Boost alpha slightly when a touch is active for extra glow.
+            const alpha = (40 + age * 140) * (1 + glowBoost * 0.5);
+            stroke(c[0], c[1], c[2], Math.min(255, alpha));
+            strokeWeight(0.7 + Math.min(speed, 4) * 0.5);
             line(this.px, this.py, this.x, this.y);
         }
     }
